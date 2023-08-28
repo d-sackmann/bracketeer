@@ -1,2 +1,12 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script lang="ts">
+	import EditablePlayerList from '$lib/EditablePlayerList.svelte';
+	import MatchDisplay from '$lib/MatchDisplay.svelte';
+	import { generateRoundRobinMatches, type Player } from '$lib/core';
+
+	let players: Player[] = [];
+</script>
+
+<EditablePlayerList bind:players />
+{#if players.length > 1}
+	<MatchDisplay matches={generateRoundRobinMatches(players, 3)} />
+{/if}
