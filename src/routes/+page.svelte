@@ -4,9 +4,10 @@
 	import { generateRoundRobinMatches, type Player } from '$lib/core';
 
 	let players: Player[] = [];
+	const gamesToWin = 3;
 </script>
 
 <EditablePlayerList bind:players />
 {#if players.length > 1}
-	<MatchDisplay matches={generateRoundRobinMatches(players, 3)} />
+	<MatchDisplay matches={generateRoundRobinMatches(players, gamesToWin)} {players} {gamesToWin} />
 {/if}

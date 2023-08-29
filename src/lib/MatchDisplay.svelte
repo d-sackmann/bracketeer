@@ -1,15 +1,23 @@
 <script lang="ts">
-	import type { Match } from './core';
+	import type { Match, Player } from './core';
+	import { keyBy } from './utils';
 
 	export let matches: Match[];
+	export let players: Player[];
+	export let gamesToWin: number;
 
 	let matchBeingEdited: string;
 	let gameBeingEdited: number;
-	$: maxMatches = matches[0]?.gamesToWin * 2 - 1;
+	$: maxMatches = gamesToWin * 2 - 1;
+	$: playersById = keyBy(players, 'id');
 
 	function openScoreEditor(match: Match, gameIdx: number) {
 		matchBeingEdited = match.id;
 		gameBeingEdited = gameIdx;
+	}
+
+	function getMatchDisplayName(match: Match) {
+		return match.players.map((playerId) => playersById.get(playerId)?.name).join(' vs. ');
 	}
 </script>
 
@@ -17,12 +25,12 @@
 	<tr>
 		<th>Match</th>
 		{#each { length: maxMatches } as _, i}
-			<th scope="col">Round {i + 1}</th>
+			<th scope="col">Game {i + 1}</th>
 		{/each}
 	</tr>
 	{#each matches as match (match.id)}
 		<tr>
-			<th scope="row">{match.displayName}</th>
+			<th scope="row">{getMatchDisplayName(match)}</th>
 			{#each { length: maxMatches } as _, i}
 				<td>
 					{#if match.id === matchBeingEdited && i === gameBeingEdited}
