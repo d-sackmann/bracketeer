@@ -8,29 +8,17 @@ import {
 	type Venue,
 	getIndividualResults,
 	type Slate,
-	type Match
+	type Match,
+	resultComparator,
+	type MatchResult
 } from '$lib/core';
 import { arrayEquals, assertTrue } from '$lib/utils';
 
 const mockPlayers = (numPlayers: number) => {
-	return [
-		{ id: 'a', name: 'paul', present: true, playing: false, rank: 1000 },
-		{ id: 'b', name: 'joe', present: true, playing: false, rank: 2000 },
-		{ id: 'c', name: 'mary', present: true, playing: false, rank: 3000 },
-		{ id: 'd', name: 'ted', present: true, playing: false, rank: 4000 },
-		{ id: 'e', name: 'zach', present: true, playing: false, rank: 5000 },
-		{ id: 'f', name: 'glenn', present: true, playing: false, rank: 6000 },
-		{ id: 'g', name: 'luis', present: true, playing: false, rank: 1500 },
-		{ id: 'h', name: 'henry', present: true, playing: false, rank: 2500 },
-		{ id: 'i', name: 'moe', present: true, playing: false, rank: 3500 },
-		{ id: 'j', name: 'paulina', present: true, playing: false, rank: 4500 },
-		{ id: 'k', name: 'esther', present: true, playing: false, rank: 5500 },
-		{ id: 'l', name: 'keaton', present: true, playing: false, rank: 6500 },
-		{ id: 'm', name: 'mike', present: true, playing: false, rank: 100 },
-		{ id: 'n', name: 'andy', present: true, playing: false, rank: 200 },
-		{ id: 'o', name: 'vincent', present: true, playing: false, rank: 300 },
-		{ id: 'p', name: 'marcel', present: true, playing: false, rank: 400 }
-	].slice(0, numPlayers);
+	return ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'].slice(
+		0,
+		numPlayers
+	);
 };
 
 describe('generateRoundRobinMatches', () => {
@@ -254,10 +242,7 @@ describe('getIndividualResults', () => {
 		setScore(slate, 3, { a: 2, d: 11 });
 		setScore(slate, 4, { a: 2, d: 11 });
 
-		const playerA = players.find((p) => p.id === 'a');
-
-		assertTrue(!!playerA);
-		const result = getIndividualResults(playerA, slate);
+		const result = getIndividualResults('a', slate);
 
 		expect(result.length).toBe(3);
 
@@ -277,4 +262,218 @@ describe('getIndividualResults', () => {
 		expect(result.find((m) => m.matchId === aVsD.id)?.gamesLost).toBe(3);
 		expect(result.find((m) => m.matchId === aVsD.id)?.outcome).toBe('loss');
 	});
+});
+
+describe('resultComparator', () => {
+	const drawScenarios: Array<Array<Array<MatchResult>>> = [
+		[[], []],
+		[
+			[
+				{
+					matchId: 'a',
+					outcome: 'win',
+					gamesWon: 3,
+					gamesLost: 0,
+					games: [
+						{
+							pointsWon: 11,
+							pointsLost: 0,
+							outcome: 'win'
+						}
+					],
+					opponents: ['z']
+				}
+			],
+			[
+				{
+					matchId: 'b',
+					outcome: 'win',
+					gamesWon: 3,
+					gamesLost: 0,
+					games: [
+						{
+							pointsWon: 11,
+							pointsLost: 0,
+							outcome: 'win'
+						}
+					],
+					opponents: ['z']
+				}
+			]
+		]
+	];
+
+	it.each(drawScenarios)('should return 0 when the match results cannot be ranked', (a, b) => {
+		const { value, rule } = resultComparator(a, b);
+		expect(rule).toBe('default');
+		expect(value).toBe(0);
+	});
+
+	// Make a scenario where the two results need to be tie broken by the head to head
+	// This is a good basis for modifying to test the other scenarios since any changes to point diff
+	// or match diff will change the result
+	function makeBaseScenario(): { a: MatchResult[]; b: MatchResult[]; expected: number } {
+		return {
+			a: [
+				{
+					matchId: 'a',
+					outcome: 'win',
+					gamesWon: 3,
+					gamesLost: 0,
+					games: [
+						{
+							pointsWon: 11,
+							pointsLost: 0,
+							outcome: 'win'
+						}
+					],
+					opponents: ['2']
+				},
+				{
+					matchId: 'b',
+					outcome: 'loss',
+					gamesWon: 0,
+					gamesLost: 3,
+					games: [
+						{
+							pointsWon: 0,
+							pointsLost: 11,
+							outcome: 'loss'
+						}
+					],
+					opponents: ['3']
+				},
+				{
+					matchId: 'c',
+					outcome: 'win',
+					gamesWon: 3,
+					gamesLost: 0,
+					games: [
+						{
+							pointsWon: 11,
+							pointsLost: 0,
+							outcome: 'win'
+						}
+					],
+					opponents: ['4']
+				}
+			],
+			b: [
+				{
+					matchId: 'a',
+					outcome: 'loss',
+					gamesWon: 0,
+					gamesLost: 3,
+					games: [
+						{
+							pointsWon: 0,
+							pointsLost: 11,
+							outcome: 'loss'
+						}
+					],
+					opponents: ['1']
+				},
+				{
+					matchId: 'd',
+					outcome: 'win',
+					gamesWon: 3,
+					gamesLost: 0,
+					games: [
+						{
+							pointsWon: 11,
+							pointsLost: 0,
+							outcome: 'win'
+						}
+					],
+					opponents: ['3']
+				},
+				{
+					matchId: 'e',
+					outcome: 'win',
+					gamesWon: 3,
+					gamesLost: 0,
+					games: [
+						{
+							pointsWon: 11,
+							pointsLost: 0,
+							outcome: 'win'
+						}
+					],
+					opponents: ['4']
+				}
+			],
+			expected: -1
+		};
+	}
+	const BASE_SCENARIO = Object.freeze(makeBaseScenario());
+	const head2HeadScenarios: { a: MatchResult[]; b: MatchResult[]; expected: number }[] = [
+		BASE_SCENARIO,
+		{
+			b: BASE_SCENARIO.a,
+			a: BASE_SCENARIO.b,
+			expected: 1
+		}
+	];
+
+	it.each(head2HeadScenarios)(
+		'should determine the winner by the head to head result',
+		({ a, b, expected }) => {
+			const { value, rule } = resultComparator(a, b);
+			expect(rule).toBe('head2head');
+			expect(value).toBe(expected);
+		}
+	);
+
+	const winByPts1 = makeBaseScenario();
+	winByPts1.b[1].games[0].pointsLost = 1;
+	winByPts1.expected = -1;
+
+	const winByPts2 = makeBaseScenario();
+	winByPts2.a[1].games[0].pointsWon = 1;
+	winByPts2.expected = -1;
+	const winByPointsSecarios = [winByPts1, winByPts2];
+
+	it.each(winByPointsSecarios)(
+		'should determine the winner by the point differential',
+		({ a, b, expected }) => {
+			const { value, rule } = resultComparator(a, b);
+			expect(rule).toBe('points');
+			expect(value).toBe(expected);
+		}
+	);
+
+	const winByGames1 = makeBaseScenario();
+	winByGames1.b[1].gamesLost = 1;
+
+	const winByGames2 = makeBaseScenario();
+	winByGames2.a[2].gamesLost = 1;
+	winByGames2.expected = 1;
+	winByGames1.b[1].gamesLost = 1;
+	const winByGamesScenarios = [winByGames1, winByGames2];
+
+	it.each(winByGamesScenarios)(
+		'should determine the winner by the number of games lost',
+		({ a, b, expected }) => {
+			const { value, rule } = resultComparator(a, b);
+			expect(rule).toBe('games');
+			expect(value).toBe(expected);
+		}
+	);
+
+	const winByMatches1 = makeBaseScenario();
+	winByMatches1.a[1].outcome = 'win';
+
+	const winByMatches2 = makeBaseScenario();
+	winByMatches2.b[0].outcome = 'win';
+	winByMatches2.expected = 1;
+	const winByMatchesScenarios = [winByMatches1, winByMatches2];
+
+	it.each(winByMatchesScenarios)(
+		'should determine the winner by the number of games lost',
+		({ a, b, expected }) => {
+			const { value, rule } = resultComparator(a, b);
+			expect(rule).toBe('matches');
+			expect(value).toBe(expected);
+		}
+	);
 });

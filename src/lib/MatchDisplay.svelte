@@ -1,23 +1,33 @@
 <script lang="ts">
-	import type { Match, Player } from './core';
-	import { keyBy } from './utils';
+	import { generateRoundRobinMatches, type Match, type Venue } from '$lib/core';
+	import PlayerName from './PlayerName.svelte';
+	import ResultList from './ResultList.svelte';
 
-	export let matches: Match[];
-	export let players: Player[];
+	export let playerIds: string[];
 	export let gamesToWin: number;
+	export let venue: Venue;
 
-	let matchBeingEdited: string;
-	let gameBeingEdited: number;
+	let matchBeingEdited: string | null;
+	let gameBeingEdited: number | null;
+
+	let matches: Match[] = [];
 	$: maxMatches = gamesToWin * 2 - 1;
-	$: playersById = keyBy(players, 'id');
+
+	$: rebuild(playerIds, gamesToWin);
+	$: slate = { matches, venue, gamesToWin };
+
+	function rebuild(playerIds: string[], gamesToWin: number) {
+		matches = generateRoundRobinMatches(playerIds, gamesToWin);
+	}
 
 	function openScoreEditor(match: Match, gameIdx: number) {
 		matchBeingEdited = match.id;
 		gameBeingEdited = gameIdx;
 	}
 
-	function getMatchDisplayName(match: Match) {
-		return match.players.map((playerId) => playersById.get(playerId)?.name).join(' vs. ');
+	function closeScoreEditor() {
+		matchBeingEdited = null;
+		gameBeingEdited = null;
 	}
 </script>
 
@@ -30,13 +40,18 @@
 	</tr>
 	{#each matches as match (match.id)}
 		<tr>
-			<th scope="row">{getMatchDisplayName(match)}</th>
+			<th scope="row">
+				<PlayerName playerId={match.players[0]} /> vs. <PlayerName playerId={match.players[1]} />
+			</th>
 			{#each { length: maxMatches } as _, i}
 				<td>
 					{#if match.id === matchBeingEdited && i === gameBeingEdited}
-						{#each match.games[i].score as score, gameIdx}
-							<input type="number" bind:value={score} id="score-{gameIdx}" />
-						{/each}
+						<form on:submit|preventDefault={() => closeScoreEditor()}>
+							{#each match.games[i].score as score, gameIdx}
+								<input type="number" bind:value={score} id="score-{gameIdx}" />
+							{/each}
+							<input type="submit" hidden />
+						</form>
 					{:else}
 						<button type="button" on:click={() => openScoreEditor(match, i)}
 							>{match.games[i].score[0]} - {match.games[i].score[1]}</button
@@ -47,3 +62,5 @@
 		</tr>
 	{/each}
 </table>
+
+<ResultList {slate} {playerIds} />

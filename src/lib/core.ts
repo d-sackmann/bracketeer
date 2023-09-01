@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { assertTrue, sum, tally } from './utils';
+import { assertTrue, sum, tally } from '$lib/utils';
 
 export type Venue = {
 	name: string;
@@ -14,7 +14,6 @@ export type Player = {
 	name: string;
 	present: boolean;
 	playing: boolean;
-	rank?: number;
 };
 
 export type Match = {
@@ -44,15 +43,15 @@ function generateGames(gamesToWin: number): Game[] {
 	}));
 }
 
-function generateMatch(players: Player[], gamesToWin: number): Match {
+function generateMatch(players: string[], gamesToWin: number): Match {
 	return {
 		id: uuid(),
-		players: players.map((p) => p.id),
+		players,
 		games: generateGames(gamesToWin)
 	};
 }
 
-export function generateRoundRobinMatches(players: Player[], gamesToWin: number): Match[] {
+export function generateRoundRobinMatches(players: string[], gamesToWin: number): Match[] {
 	let matches: Match[] = [];
 	for (let i = 0; i < players.length; i++) {
 		matches = matches.concat(
@@ -63,9 +62,7 @@ export function generateRoundRobinMatches(players: Player[], gamesToWin: number)
 	return matches;
 }
 
-export function generateSlates(venues: Venue[], players: Player[], gamesToWin: number): Slate[] {
-	players.sort((a, b) => (b.rank || 0) - (a.rank || 0));
-
+export function generateSlates(venues: Venue[], players: string[], gamesToWin: number): Slate[] {
 	return venues.map((venue, venueIdx) => {
 		const playersForVenue = players.filter((_, playerIdx) => {
 			return (playerIdx + venueIdx) % venues.length === 0;
@@ -102,6 +99,7 @@ export type MatchResult = {
 	gamesWon: number;
 	gamesLost: number;
 	games: GameResult[];
+	opponents: string[];
 };
 
 export function determineGameOutcome(
@@ -148,12 +146,12 @@ export function determineMatchOutcome(games: GameResult[], gamesToWin: number) {
 	};
 }
 
-export function getIndividualResults(player: Player, slate: Slate): MatchResult[] {
-	const matches = slate.matches.filter((match) => match.players.includes(player.id));
+export function getIndividualResults(player: string, slate: Slate): MatchResult[] {
+	const matches = slate.matches.filter((match) => match.players.includes(player));
 
 	return matches.map((match) => {
-		const playerScoreIdx = match.players.indexOf(player.id);
-		assertTrue(playerScoreIdx !== -1, `Match ${match.id} has no such player ${player.id}`);
+		const playerScoreIdx = match.players.indexOf(player);
+		assertTrue(playerScoreIdx !== -1, `Match ${match.id} has no such player ${player}`);
 
 		const gameResults: GameResult[] = match.games.map((game) => {
 			const pointsWon = game.score[playerScoreIdx];
@@ -168,13 +166,76 @@ export function getIndividualResults(player: Player, slate: Slate): MatchResult[
 
 		return {
 			...determineMatchOutcome(gameResults, slate.gamesToWin),
-			matchId: match.id
+			matchId: match.id,
+			opponents: match.players.filter((id) => id !== player)
 		};
 	});
 }
 
-export function getResults(slate: Slate, players: Player[]): MatchResult[][] {
-	return players.map((player) => {
-		return getIndividualResults(player, slate);
-	});
+type MatchResultsComparison = {
+	value: number;
+	rule: 'matches' | 'games' | 'points' | 'head2head' | 'default';
+};
+export function resultComparator(a: MatchResult[], b: MatchResult[]): MatchResultsComparison {
+	// If one player has more wins than the other, they win
+	const [aMatchWins, bMatchWins] = [a, b].map((result) =>
+		tally(result, (r) => WIN_OUTCOMES.includes(r.outcome))
+	);
+	const winDiff = bMatchWins - aMatchWins;
+	if (winDiff !== 0) {
+		return {
+			value: winDiff,
+			rule: 'matches'
+		};
+	}
+
+	// If players won the same amount of matches, the winner is whoever dropped fewer games
+	// Comparison is a - b here because it's better to have fewer losses
+	const [aGamesLost, bGamesLost] = [a, b].map((result) =>
+		sum(result.map(({ gamesLost }) => gamesLost))
+	);
+	const gamesLostDiff = aGamesLost - bGamesLost;
+	if (gamesLostDiff !== 0) {
+		return {
+			value: gamesLostDiff,
+			rule: 'games'
+		};
+	}
+
+	// If the players dropped the same number of games, the winner is whoever had the highest point differential
+	const [aPointDifferential, bPointDifferential] = [a, b].map((results) =>
+		sum(results.map((r) => sum(r.games.map((g) => g.pointsWon - g.pointsLost))))
+	);
+	const pointDifferentialDiff = bPointDifferential - aPointDifferential;
+	if (pointDifferentialDiff !== 0) {
+		return {
+			value: pointDifferentialDiff,
+			rule: 'points'
+		};
+	}
+
+	// Finally, the winner is whichever player won the match between the two
+	const head2HeadMatch = a.find((resultForA) =>
+		b.map((resultForB) => resultForB.matchId).includes(resultForA.matchId)
+	);
+	if (head2HeadMatch) {
+		if (WIN_OUTCOMES.includes(head2HeadMatch.outcome)) {
+			return {
+				value: -1,
+				rule: 'head2head'
+			};
+		}
+		if (LOSS_OUTCOMES.includes(head2HeadMatch.outcome)) {
+			return {
+				value: 1,
+				rule: 'head2head'
+			};
+		}
+	}
+
+	// If there's still no winner, the match results are equivalent
+	return {
+		value: 0,
+		rule: 'default'
+	};
 }

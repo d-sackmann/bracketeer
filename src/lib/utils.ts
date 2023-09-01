@@ -15,14 +15,11 @@ export function tally<T>(list: T[], predicate: (e: T, i?: number, l?: T[]) => bo
 	}, 0);
 }
 
-export function keyBy<T, K extends keyof T>(list: T[] = [], propName: K): Map<T[K], T> {
-	const result = new Map<T[K], T>();
-
-	for (let i = 0; i < list.length; i++) {
-		result.set(list[i][propName], list[i]);
-	}
-
-	return result;
+export function keyBy<T, K extends keyof T>(list: T[], keyGetter: (item: T) => K): Record<K, T> {
+	return list.reduce((obj, item) => {
+		obj[keyGetter(item)] = item;
+		return obj;
+	}, {} as Record<K, T>);
 }
 
 export function arrayEquals<T extends K, K>(arr1: T[], arr2: K[]): boolean {
