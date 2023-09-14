@@ -12,8 +12,6 @@ export type Game = {
 export type Player = {
 	id: string;
 	name: string;
-	present: boolean;
-	playing: boolean;
 };
 
 export type Match = {
@@ -23,17 +21,24 @@ export type Match = {
 };
 
 export type Slate = {
-	venue: Venue;
+	players: string[];
+	id: string;
+	name: string;
 	matches: Match[];
 	gamesToWin: number;
+};
+
+export type Contest = {
+	name: string;
+	slates: Slate[];
+	playersPerGame: number;
+	joinCode: string;
 };
 
 export function generatePlayer(name: string) {
 	return {
 		name,
-		id: uuid(),
-		present: true,
-		playing: false
+		id: uuid()
 	};
 }
 
@@ -62,15 +67,21 @@ export function generateRoundRobinMatches(players: string[], gamesToWin: number)
 	return matches;
 }
 
-export function generateSlates(venues: Venue[], players: string[], gamesToWin: number): Slate[] {
-	return venues.map((venue, venueIdx) => {
+export function generateSlates(
+	groupNames: string[],
+	players: string[],
+	gamesToWin: number
+): Slate[] {
+	return groupNames.map((groupName, venueIdx) => {
 		const playersForVenue = players.filter((_, playerIdx) => {
-			return (playerIdx + venueIdx) % venues.length === 0;
+			return (playerIdx + venueIdx) % groupNames.length === 0;
 		});
 
 		return {
-			gamesToWin,
-			venue,
+			id: uuid(),
+			players: playersForVenue,
+			gamesToWin: gamesToWin,
+			name: groupName,
 			matches: generateRoundRobinMatches(playersForVenue, gamesToWin)
 		};
 	});

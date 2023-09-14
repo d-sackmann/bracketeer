@@ -10,8 +10,7 @@
 
 	setContext(PLAYER_CONTEXT, writable({} as Record<string, Writable<Player>>));
 	const gamesToWin = 3;
-	const venue = { name: 'T 1' };
 </script>
 
 <EditablePlayerList onPlayerListFinalized={(p) => (playerIds = p.map(({ id }) => id))} />
-<MatchDisplay {playerIds} {gamesToWin} {venue} />
+<MatchDisplay {playerIds} {gamesToWin} groupName="T 1" />

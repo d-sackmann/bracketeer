@@ -10,7 +10,7 @@
 
 	const playerStore = <PlayerContext>getContext(PLAYER_CONTEXT);
 
-	let players: Player[] = [];
+	export let players: Player[] = [];
 
 	let newPlayerName = '';
 	let allowListChanges = true;

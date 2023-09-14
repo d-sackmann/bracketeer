@@ -5,7 +5,6 @@ import {
 	determineGameOutcome,
 	type GameResult,
 	determineMatchOutcome,
-	type Venue,
 	getIndividualResults,
 	type Slate,
 	type Match,
@@ -49,8 +48,8 @@ describe('generateRoundRobinMatches', () => {
 });
 
 describe('generateSlates', () => {
-	const mockVenues = (numVenues: number) => {
-		return Array.from({ length: numVenues }, (v, k) => ({ name: `Table ${k + 1}` }));
+	const constructGroupNames = (numGroups: number) => {
+		return Array.from({ length: numGroups }, (v, k) => `Table ${k + 1}`);
 	};
 	it('should return an empty list if given no venues', () => {
 		const result = generateSlates([], mockPlayers(16), 3);
@@ -59,7 +58,7 @@ describe('generateSlates', () => {
 	});
 
 	it('should return a slate per venue with an evenly divisible set of players', () => {
-		const result = generateSlates(mockVenues(4), mockPlayers(16), 3);
+		const result = generateSlates(constructGroupNames(4), mockPlayers(16), 3);
 
 		expect(result.length).toBe(4);
 
@@ -70,7 +69,7 @@ describe('generateSlates', () => {
 	});
 
 	it('should return a slate for 16 players with 3 venues', () => {
-		const result = generateSlates(mockVenues(3), mockPlayers(16), 3);
+		const result = generateSlates(constructGroupNames(3), mockPlayers(16), 3);
 
 		expect(result.length).toBe(3);
 
@@ -80,7 +79,7 @@ describe('generateSlates', () => {
 	});
 
 	it('should return a slate for 10 players with 3 venues', () => {
-		const result = generateSlates(mockVenues(3), mockPlayers(10), 3);
+		const result = generateSlates(constructGroupNames(3), mockPlayers(10), 3);
 
 		expect(result.length).toBe(3);
 
@@ -90,7 +89,7 @@ describe('generateSlates', () => {
 	});
 
 	it('should return a slate for 7 players with 2 venues', () => {
-		const result = generateSlates(mockVenues(2), mockPlayers(7), 3);
+		const result = generateSlates(constructGroupNames(2), mockPlayers(7), 3);
 
 		expect(result.length).toBe(2);
 
@@ -223,10 +222,8 @@ describe('getIndividualResults', () => {
 	}
 
 	it('should return the match results for a player', () => {
-		const venue: Venue = { name: 'Table 1' };
-
 		const players = mockPlayers(4);
-		const [slate] = generateSlates([venue], players, 3);
+		const [slate] = generateSlates(['Table 1'], players, 3);
 
 		setScore(slate, 0, { a: 11, b: 0 });
 		setScore(slate, 1, { a: 11, b: 0 });

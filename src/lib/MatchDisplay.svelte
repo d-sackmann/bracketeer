@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { generateRoundRobinMatches, type Match, type Venue } from '$lib/core';
+	import { generateRoundRobinMatches, type Match } from '$lib/core';
 	import PlayerName from './PlayerName.svelte';
 	import ResultList from './ResultList.svelte';
 
 	export let playerIds: string[];
 	export let gamesToWin: number;
-	export let venue: Venue;
+	export let groupName: string;
 
 	let matchBeingEdited: string | null;
 	let gameBeingEdited: number | null;
@@ -14,7 +14,7 @@
 	$: maxMatches = gamesToWin * 2 - 1;
 
 	$: rebuild(playerIds, gamesToWin);
-	$: slate = { matches, venue, gamesToWin };
+	$: slate = { matches, name: groupName, gamesToWin };
 
 	function rebuild(playerIds: string[], gamesToWin: number) {
 		matches = generateRoundRobinMatches(playerIds, gamesToWin);
