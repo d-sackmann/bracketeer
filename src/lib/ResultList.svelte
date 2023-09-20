@@ -6,27 +6,16 @@
 		type MatchResult,
 		resultComparator
 	} from '$lib/core';
-	import { type Readable, derived } from 'svelte/store';
-	import { getContext } from 'svelte';
-	import { PLAYER_CONTEXT, type PlayerContext } from './contexts/player-context';
-	import PlayerName from './PlayerName.svelte';
-
+	import { tally } from './utils';
 	export let slate: Slate;
-	export let playerIds: string[];
+	export let playersById: Record<string, Player>;
 
 	let orderedResults: { player: Player; results: MatchResult[] }[];
-	const playerStore = getContext<PlayerContext>(PLAYER_CONTEXT);
 
-	let playerList: Readable<Player[]>;
-	$: {
-		playerList = derived(
-			playerIds.map((id) => $playerStore[id]),
-			(x) => x
-		);
-	}
+	$: playerList = slate.players.map((id) => playersById[id]).filter((x) => x);
 
 	$: {
-		orderedResults = $playerList
+		orderedResults = playerList
 			.map((player) => {
 				return {
 					results: getIndividualResults(player.id, slate),
@@ -43,14 +32,15 @@
 <table>
 	<tr>
 		<th>VS</th>
-		{#each playerIds as opponentId}
-			<th scope="col"><PlayerName playerId={opponentId} /></th>
+		{#each slate.players as opponentId}
+			<th scope="col">{playersById[opponentId]?.name || 'Unknown'}</th>
 		{/each}
+		<th>Wins</th>
 	</tr>
 	{#each orderedResults as orderedResult (orderedResult.player.id)}
 		<tr>
 			<th scope="row">{orderedResult.player.name}</th>
-			{#each playerIds as opponentId}
+			{#each slate.players as opponentId}
 				{@const matchResultForOpponent = orderedResult.results.find((r) =>
 					r.opponents.includes(opponentId)
 				)}
@@ -64,6 +54,7 @@
 					{/if}
 				</td>
 			{/each}
+			<td>{tally(orderedResult.results, ({ outcome }) => outcome === 'win')}</td>
 		</tr>
 	{/each}
 </table>

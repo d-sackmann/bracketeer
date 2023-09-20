@@ -4,6 +4,7 @@ import {
 	createAppUserStmt,
 	createContestOwnershipStmt,
 	createContestStmt,
+	createGameScoreStatement,
 	createMatchPlayerStmt,
 	createMatchStmt,
 	createPlayerStmt,
@@ -11,7 +12,10 @@ import {
 	getFullContestStmt,
 	getPlayerForContestStmt,
 	type GetFullContestStmtRow,
-	type GetPlayersRow
+	type GetPlayersRow,
+	listContestsStmt,
+	type ContestListRow,
+	createGameStmt
 } from './statements';
 import type { Contest, Player, Slate } from '$lib/core';
 
@@ -45,10 +49,9 @@ export function createAppUser(_userData: NewUser) {
 	return userId;
 }
 
-// const defaultJoinCodeFn = () => Math.random().toString(36).substring(2, 7);
 export function createNewContest(contestData: NewContest) {
 	const contestId = uuid();
-	getDatabase().transaction(() => {
+	const tx = getDatabase().transaction(() => {
 		// Create the contest record
 		createContestStmt.run({
 			id: contestId,
@@ -83,12 +86,35 @@ export function createNewContest(contestData: NewContest) {
 				matchData.players.forEach((playerData, idx) => {
 					createMatchPlayerStmt.run({ matchId: matchData.id, playerId: playerData, idx });
 				});
+
+				const numGames = slateData.gamesToWin * 2 - 1;
+				for (let i = 0; i < numGames; i++) {
+					createGameStmt.run({ matchId: matchData.id, idx: i });
+					createGameScoreStatement.run({
+						matchId: matchData.id,
+						gameIdx: i,
+						playerId: matchData.players[0],
+						value: 0
+					});
+					createGameScoreStatement.run({
+						matchId: matchData.id,
+						gameIdx: i,
+						playerId: matchData.players[1],
+						value: 0
+					});
+				}
 			});
 		});
 
 		createContestOwnershipStmt.run({ contestId, appUserId: contestData.creatorId });
-	})();
+	});
 
+	try {
+		tx();
+	} catch (e) {
+		console.error(e);
+		throw e;
+	}
 	return contestId;
 }
 
@@ -115,11 +141,16 @@ export function getContest(contestId: string): Contest {
 						players: []
 				  };
 
-			slateForRow.matches.push({
-				id: row.matchId,
-				players: [row.player1Id, row.player2Id],
-				games: []
-			});
+			if (slateForRow.matches.length <= row.matchIdx) {
+				slateForRow.matches.push({
+					id: row.matchId,
+					players: [row.player1Id, row.player2Id],
+					games: []
+				});
+			}
+
+			const match = slateForRow.matches[slateForRow.matches.length - 1];
+			match.games.push({ score: [row.player1Score || 0, row.player2Score || 0] });
 
 			[row.player1Id, row.player2Id].forEach((playerId) => {
 				if (!slateForRow.players.includes(playerId)) {
@@ -143,4 +174,31 @@ export function getPlayersForContest(contestId: string): Player[] {
 	}
 
 	return players;
+}
+
+type ContestListEntry = {
+	name: string;
+	id: string;
+	createdAt: Date;
+};
+export function listContests(): ContestListEntry[] {
+	const rows: ContestListRow[] = listContestsStmt.all() as ContestListRow[];
+	return rows.map(({ createdAt, ...rest }) => {
+		return {
+			createdAt: new Date(createdAt),
+			...rest
+		};
+	});
+}
+
+export function updateGameScores(
+	matchId: string,
+	gameIdx: number,
+	scores: { playerId: string; value: number }[]
+) {
+	getDatabase().transaction(() => {
+		scores.forEach(({ playerId, value }) => {
+			createGameScoreStatement.run({ matchId, gameIdx, playerId, value });
+		});
+	})();
 }

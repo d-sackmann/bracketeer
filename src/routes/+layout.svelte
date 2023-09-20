@@ -3,6 +3,6 @@
 
 <nav>
 	<a href="/">Home</a>
-	<a href="/utils">Utils</a>
+	<a href="/contests">Contests</a>
 </nav>
 <slot />

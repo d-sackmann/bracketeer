@@ -130,6 +130,22 @@ describe('createNewContest', () => {
 
 				expect(matchPlayerRows).toBeDefined();
 				expect(matchPlayerRows.length).toBe(2);
+
+				const gameRows = getDatabase()
+					.prepare(`SELECT matchId, idx FROM game where matchId = :matchId order by idx`)
+					.all({ matchId: matchRow.id });
+				expect(gameRows).toBeDefined();
+				expect(gameRows.length).toBe(slateRow.gamesToWin * 2 - 1);
+
+				gameRows.forEach((_, gameRowIdx) => {
+					const scoreRows = getDatabase()
+						.prepare(
+							`SELECT matchId, gameIdx, playerId FROM gameScore where matchId = :matchId and gameIdx = :idx`
+						)
+						.all({ matchId: matchRow.id, idx: gameRowIdx });
+					expect(scoreRows).toBeDefined();
+					expect(scoreRows.length).toBe(2);
+				});
 			});
 		});
 
@@ -151,5 +167,7 @@ describe('getContestById', () => {
 		const result = getContest(contestId);
 
 		expect(result).toBeDefined();
+
+		expect(result.slates[0].matches[0].games.length).toBe(7);
 	});
 });

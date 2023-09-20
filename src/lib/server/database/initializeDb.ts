@@ -81,11 +81,12 @@ CREATE TABLE IF NOT EXISTS matchPlayer (
 CREATE UNIQUE INDEX IF NOT EXISTS matchPlayerIdx on matchPlayer(matchId, idx);
 
 CREATE TABLE IF NOT EXISTS gameScore (
-    gameId varchar(36) NOT NULL,
+    matchId varchar(36) NOT NULL,
+    gameIdx INTEGER NOT NULL,
     playerId varchar(36) NOT NULL,
     value INTEGER DEFAULT 0 NOT NULL,
-    PRIMARY KEY (gameId, playerId),
-    FOREIGN KEY (gameId) references game(id),
+    PRIMARY KEY (matchId, gameIdx, playerId),
+    FOREIGN KEY (matchId, gameIdx) references game(matchId, idx),
     FOREIGN KEY (playerId) references player(id)
 );
 `;
@@ -98,8 +99,6 @@ export default function (): BetterSQLite3.Database {
 	database.pragma('journal_mode = WAL');
 	database.pragma('foreign_keys = ON');
 	database.exec(schemaSql);
-
-	console.log('Database initialization complete');
 
 	return database;
 }

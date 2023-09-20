@@ -73,10 +73,14 @@ export type GetFullContestStmtRow = {
 	playersPerGame: number;
 	joinCode: string;
 	matchId: string;
+	matchIdx: number;
 	player1Id: string;
 	player2Id: string;
 	player1Name: string;
 	player2Name: string;
+	player1Score: number | null;
+	player2Score: number | null;
+	gameIdx: number | null;
 };
 export const getFullContestStmt = statementFactory((db) =>
 	db.prepare(`
@@ -93,7 +97,10 @@ export const getFullContestStmt = statementFactory((db) =>
     mPlayer1.playerId player1Id,
     mPlayer2.playerId player2Id,
     player1.name player1Name,
-    player2.name player2Name
+    player2.name player2Name,
+	gameScore1.value as player1Score,
+	gameScore2.value as player2Score,
+	game.idx as gameIdx
 from match
     inner join matchPlayer as mPlayer1 on (
         mPlayer1.matchId = match.id
@@ -107,9 +114,31 @@ from match
     inner join player as player2 on mplayer2.playerId = player2.id
     inner join slate on slate.id = match.slateId
     inner join contest on slate.contestId = contest.id
+	inner join game on game.matchId = match.id
+	inner join gameScore as gameScore1 on (gameScore1.playerId = player1.id AND gameScore1.gameIdx = game.idx AND gameScore1.matchId = match.id) 
+	inner join gameScore as gameScore2 on (gameScore2.playerId = player2.id AND gameScore2.gameIdx = game.idx AND gameScore2.matchId = match.id) 
 where contestId = :contestId
 order by slateIdx,
-    matchIdx
+    matchIdx, gameIdx
 ;
 	`)
+);
+
+export type ContestListRow = {
+	name: string;
+	id: string;
+	createdAt: string;
+};
+export const listContestsStmt = statementFactory((db) =>
+	db.prepare(`SELECT id, name, createdAt from contest order by createdAt DESC`)
+);
+
+export const createGameStmt = statementFactory((db) =>
+	db.prepare(`INSERT INTO game(matchId, idx) values (:matchId, :idx)`)
+);
+
+export const createGameScoreStatement = statementFactory((db) =>
+	db.prepare(
+		`INSERT INTO gameScore (matchId, gameIdx, playerId, value) VALUES (:matchId, :gameIdx, :playerId, :value) ON CONFLICT DO UPDATE set value = :value`
+	)
 );

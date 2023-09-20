@@ -44,7 +44,8 @@ export function generatePlayer(name: string) {
 
 function generateGames(gamesToWin: number): Game[] {
 	return Array.from({ length: gamesToWin * 2 - 1 }).map(() => ({
-		score: [0, 0]
+		score: [0, 0],
+		id: uuid()
 	}));
 }
 
