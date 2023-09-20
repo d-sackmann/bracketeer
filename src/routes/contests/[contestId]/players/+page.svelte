@@ -5,4 +5,9 @@
 	export let data: PageData;
 </script>
 
-<EditablePlayerList players={data.players} allowRemoval={false} allowAddition={false} />
+<EditablePlayerList
+	groupCount={undefined}
+	players={data.players}
+	allowRemoval={false}
+	allowAddition={false}
+/>

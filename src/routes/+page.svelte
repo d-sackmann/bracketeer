@@ -1,35 +1,69 @@
 <script lang="ts">
+	import RadioGroup from './RadioGroup.svelte';
+
 	import EditablePlayerList from '$lib/EditablePlayerList.svelte';
+	import type { GroupMethod, Player } from '$lib/core';
+
+	let groupMethod: GroupMethod = 'alternating';
+	let groupCount = 1;
+	let players: Player[] = [];
+
+	const seriesLengths = [
+		{ label: '2 / 3', value: 2, checked: true },
+		{ label: '3 / 5', value: 3 },
+		{ label: '4 / 7', value: 4 }
+	];
+	const groupOptions = [
+		{
+			label: 'Alternating',
+			value: 'alternating',
+			checked: true
+		},
+		{
+			label: 'Grouped',
+			value: 'grouped'
+		},
+		{
+			label: 'Random',
+			value: 'random'
+		}
+	];
+
+	function getMaxGroups(playerCount: number) {
+		const minGroupSize = 2;
+		return Math.max(1, Math.floor(playerCount / minGroupSize));
+	}
+	$: groupNumOptions = Array.from({ length: getMaxGroups(players.length) }).map((_, idx) => ({
+		value: idx + 1,
+		label: idx + 1
+	}));
 </script>
 
+{groupMethod}
 <form method="POST" action="/contests">
 	<div>
 		<label for="contest-name">Name:</label>
 		<input name="contestName" id="contest-name" />
 	</div>
-	<div>
-		<label for="num-groups">Number of groups:</label>
-		<input type="number" name="numGroups" id="num-groups" />
-	</div>
 
-	<fieldset>
-		<legend>Series length</legend>
+	<EditablePlayerList {groupCount} {groupMethod} bind:players />
 
-		<div>
-			<input type="radio" name="gamesToWin" id="games-to-win-bo3" value="2" />
-			<label for="games-to-win">Best of 3</label>
-		</div>
-
-		<div>
-			<input type="radio" name="gamesToWin" id="games-to-win-bo5" value="3" />
-			<label for="games-to-win">Best of 5</label>
-		</div>
-		<div>
-			<input type="radio" name="gamesToWin" id="games-to-win-bo7" value="4" />
-			<label for="games-to-win">Best of 7</label>
-		</div>
-	</fieldset>
-	<EditablePlayerList />
+	<RadioGroup
+		label="Number of groups"
+		options={groupNumOptions}
+		name="numGroups"
+		bind:value={groupCount}
+	/>
+	<RadioGroup
+		label="Grouping method"
+		options={groupOptions}
+		name="groupMethod"
+		bind:value={groupMethod}
+	/>
+	<RadioGroup label="Series length" options={seriesLengths} name="gamesToWin" value={2} />
 
 	<button type="submit">Go</button>
 </form>
+
+<style>
+</style>

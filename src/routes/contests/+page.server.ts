@@ -1,4 +1,4 @@
-import { generateSlates } from '$lib/core';
+import { generateSlates, type GroupMethod } from '$lib/core';
 import { createNewContest } from '$lib/server/database/contests';
 import { createAppUser } from '$lib/server/database/users';
 import type { Actions } from './$types';
@@ -9,6 +9,12 @@ export const actions = {
 		const data = await request.formData();
 
 		const contestName = data.get('contestName')?.toString() || 'New Contest';
+		const groupMethodFromForm = data.get('groupMethod')?.toString() || '';
+		const groupMethod: GroupMethod = ['random', 'grouped', 'alternating'].includes(
+			groupMethodFromForm
+		)
+			? (groupMethodFromForm as GroupMethod)
+			: 'alternating';
 		const numGroupsStr = data.get('numGroups')?.toString() || '0';
 		const gamesToWinStr = data.get('gamesToWin')?.toString() || '2';
 		const playerNames = data.getAll('playerName');
@@ -30,7 +36,8 @@ export const actions = {
 			slates: generateSlates(
 				groupNames,
 				players.map((p) => p.id),
-				parseInt(gamesToWinStr)
+				parseInt(gamesToWinStr),
+				groupMethod
 			)
 		});
 

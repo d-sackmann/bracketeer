@@ -1,6 +1,8 @@
 import { v4 as uuid } from 'uuid';
 import { assertTrue, sum, tally } from '$lib/utils';
 
+export type GroupMethod = 'grouped' | 'alternating' | 'random';
+
 export type Venue = {
 	name: string;
 };
@@ -71,11 +73,13 @@ export function generateRoundRobinMatches(players: string[], gamesToWin: number)
 export function generateSlates(
 	groupNames: string[],
 	players: string[],
-	gamesToWin: number
+	gamesToWin: number,
+	groupMethod: GroupMethod = 'alternating'
 ): Slate[] {
+	const groupNumbers = getGroupNumbers(players.length, groupNames.length, groupMethod);
 	return groupNames.map((groupName, venueIdx) => {
 		const playersForVenue = players.filter((_, playerIdx) => {
-			return (playerIdx + venueIdx) % groupNames.length === 0;
+			return groupNumbers[playerIdx] === venueIdx;
 		});
 
 		return {
@@ -250,4 +254,20 @@ export function resultComparator(a: MatchResult[], b: MatchResult[]): MatchResul
 		value: 0,
 		rule: 'default'
 	};
+}
+
+export function getGroupNumbers(
+	playerCount: number,
+	groupCount: number,
+	groupMethod: GroupMethod
+): number[] {
+	const alternatingArray = Array.from({ length: playerCount }).map((_, idx) => idx % groupCount);
+	switch (groupMethod) {
+		case 'alternating':
+			return alternatingArray;
+		case 'grouped':
+			return alternatingArray.sort();
+		case 'random':
+			return alternatingArray.sort(() => 0.5 - Math.random());
+	}
 }
