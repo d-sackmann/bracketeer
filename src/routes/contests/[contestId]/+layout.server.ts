@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { getContest, getPlayersForContest } from '$lib/server/database';
+import { getContest, getPlayersForContest } from '$lib/server/database/contests';
 
 export const load: LayoutServerLoad = async ({ params }) => {
 	let contest, players;

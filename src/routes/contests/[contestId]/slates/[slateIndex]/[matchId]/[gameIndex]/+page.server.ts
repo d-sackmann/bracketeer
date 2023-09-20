@@ -1,4 +1,4 @@
-import { updateGameScores } from '$lib/server/database';
+import { updateGameScores } from '$lib/server/database/contests';
 import type { Actions } from './$types';
 
 export const actions = {

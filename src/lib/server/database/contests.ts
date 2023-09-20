@@ -1,7 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import getDatabase from './initializeDb';
 import {
-	createAppUserStmt,
 	createContestOwnershipStmt,
 	createContestStmt,
 	createGameScoreStatement,
@@ -40,14 +39,6 @@ type NewContest = {
 	players: NewPlayer[];
 	slates: NewSlate[];
 };
-
-type NewUser = object;
-export function createAppUser(_userData: NewUser) {
-	const userId = uuid();
-	createAppUserStmt.run({ id: userId });
-
-	return userId;
-}
 
 export function createNewContest(contestData: NewContest) {
 	const contestId = uuid();

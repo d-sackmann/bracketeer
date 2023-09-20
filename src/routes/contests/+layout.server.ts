@@ -1,4 +1,4 @@
-import { listContests } from '$lib/server/database';
+import { listContests } from '$lib/server/database/contests';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = () => {

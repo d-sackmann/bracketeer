@@ -1,18 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { v4 as uuid } from 'uuid';
 import getDatabase from './initializeDb';
-import { createAppUser, createNewContest, getContest } from '.';
-
-describe('createAppUser', () => {
-	it('should create an app user', () => {
-		const userId = createAppUser({});
-
-		const userRow = getDatabase()
-			.prepare('SELECT id FROM appUser where id = :userId')
-			.get({ userId }) as { id: string };
-		expect(userRow?.id).toBe(userId);
-	});
-});
+import { createNewContest, getContest } from './contests';
+import { createAppUser } from './users';
 
 const contestSetup = () => {
 	const userId = createAppUser({});

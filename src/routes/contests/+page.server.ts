@@ -1,5 +1,6 @@
 import { generateSlates } from '$lib/core';
-import { createNewContest, createAppUser } from '$lib/server/database';
+import { createNewContest } from '$lib/server/database/contests';
+import { createAppUser } from '$lib/server/database/users';
 import type { Actions } from './$types';
 import { v4 as uuid } from 'uuid';
 
