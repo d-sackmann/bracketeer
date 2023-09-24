@@ -14,7 +14,8 @@ export const load: PageLoad = async (event) => {
 		throw error(404, 'Unable to find match given id ' + event.params.matchId);
 	}
 
-	const game = match.games[parseInt(event.params.gameIndex)];
+	const gameIdx = parseInt(event.params.gameIndex);
+	const game = match.games[gameIdx];
 	if (!game) {
 		throw error(404, 'Unable to find game given index ' + event.params.gameIndex);
 	}
@@ -27,6 +28,8 @@ export const load: PageLoad = async (event) => {
 	});
 
 	return {
+		matchId: match.id,
+		gameIdx,
 		scores
 	};
 };

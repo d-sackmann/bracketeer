@@ -4,8 +4,10 @@
 		type Slate,
 		getIndividualResults,
 		type MatchResult,
-		resultComparator
+		resultComparator,
+		isDecided
 	} from '$lib/core';
+	import Score from './Score.svelte';
 	import { tally } from './utils';
 	export let slate: Slate;
 	export let playersById: Record<string, Player>;
@@ -50,7 +52,10 @@
 					{:else if !matchResultForOpponent}
 						Missing!
 					{:else}
-						{matchResultForOpponent.gamesWon} - {matchResultForOpponent.gamesLost}
+						<Score
+							scores={[matchResultForOpponent.gamesWon, matchResultForOpponent.gamesLost]}
+							decided={isDecided(matchResultForOpponent.outcome)}
+						/>
 					{/if}
 				</td>
 			{/each}

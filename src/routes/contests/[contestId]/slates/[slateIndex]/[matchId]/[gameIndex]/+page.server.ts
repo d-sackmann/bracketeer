@@ -12,7 +12,9 @@ export const actions = {
 			return { playerId: playerId.toString(), value: parseInt(scoresFromForm[idx].toString()) };
 		});
 
-		updateGameScores(params.matchId, parseInt(params.gameIndex), scores);
+		const gameIdx = parseInt(params.gameIndex);
+
+		updateGameScores(params.matchId, gameIdx, scores);
 
 		return {
 			success: true

@@ -142,3 +142,7 @@ export const createGameScoreStatement = statementFactory((db) =>
 		`INSERT INTO gameScore (matchId, gameIdx, playerId, value) VALUES (:matchId, :gameIdx, :playerId, :value) ON CONFLICT DO UPDATE set value = :value`
 	)
 );
+
+export const getGameStatement = statementFactory((db) =>
+	db.prepare(`SELECT matchId, idx from game where matchId = :matchId AND idx = :gameIdx`)
+);

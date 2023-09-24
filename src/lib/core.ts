@@ -103,7 +103,11 @@ type Outcome =
 
 const WIN_OUTCOMES: Outcome[] = ['win', 'win_by_forfeit'];
 const LOSS_OUTCOMES: Outcome[] = ['loss', 'forfeit'];
+const DECIDED_OUTCOMES = [...LOSS_OUTCOMES, ...WIN_OUTCOMES];
 
+export function isDecided(outcome: Outcome): boolean {
+	return DECIDED_OUTCOMES.includes(outcome);
+}
 export type GameResult = {
 	pointsWon: number;
 	pointsLost: number;

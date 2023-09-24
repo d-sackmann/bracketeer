@@ -1,11 +1,13 @@
 <script lang="ts">
-	import type { Player, Slate } from '$lib/core';
-	import ResultList from './ResultList.svelte';
+	import { determineGameOutcome, isDecided, type Player, type Slate } from '$lib/core';
+	import Score from './Score.svelte';
+	import { getGameUrl } from './urlHelpers';
 
 	export let slate: Slate;
 	export let playersById: Record<string, Player>;
 	export let contestId: string;
 	export let slateIndex: number;
+	export let openScore: { matchId: string; gameIdx: number };
 </script>
 
 <table>
@@ -22,14 +24,30 @@
 					?.name || 'Unknown'}
 			</th>
 			{#each match.games as _, i}
-				<td>
-					<a href={`/contests/${contestId}/slates/${slateIndex}/${match.id}/${i}`}
-						>{match.games[i].score[0]} - {match.games[i].score[1]}</a
+				<td class={openScore.matchId === match.id && openScore.gameIdx === i ? 'open-score' : ''}>
+					<a href={getGameUrl({ contestId, slateIndex, matchId: match.id, gameIndex: i })}
+						><Score
+							scores={match.games[i].score}
+							decided={isDecided(
+								determineGameOutcome(match.games[i].score[0], match.games[i].score[1])
+							)}
+						/></a
 					>
 				</td>
 			{/each}
 		</tr>
+		{#if openScore.matchId === match.id}
+			<tr class="score-input">
+				<td />
+				<td colspan={match.games.length}><slot /></td>
+			</tr>
+		{/if}
 	{/each}
 </table>
 
-<ResultList {slate} {playersById} />
+<style>
+	.open-score,
+	.score-input {
+		background-color: var(--primary-accent-color);
+	}
+</style>

@@ -1,3 +1,21 @@
+<script lang="ts">
+	import { onNavigate } from '$app/navigation';
+
+	onNavigate((navigation) => {
+		const document = window.document as typeof window.document & {
+			startViewTransition: (cb: () => unknown) => unknown;
+		};
+		if (!document.startViewTransition) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
+</script>
+
 <slot />
 
 <style>
@@ -20,7 +38,6 @@
 
 		font-size: 23px;
 		border-radius: 5px;
-		background-color: var(--primary-accent-color);
 	}
 
 	:global(a) {

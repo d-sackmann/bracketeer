@@ -1,6 +1,5 @@
 <script lang="ts">
-	import RadioGroup from './RadioGroup.svelte';
-
+	import RadioGroup from '$lib/RadioGroup.svelte';
 	import EditablePlayerList from '$lib/EditablePlayerList.svelte';
 	import type { GroupMethod, Player } from '$lib/core';
 
@@ -39,7 +38,6 @@
 	}));
 </script>
 
-{groupMethod}
 <form method="POST" action="/contests">
 	<div>
 		<label for="contest-name">Name:</label>
