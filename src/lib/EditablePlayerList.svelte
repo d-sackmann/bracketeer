@@ -2,11 +2,12 @@
 	import Trash from 'iconoir/icons/trash.svg';
 	import Plus from 'iconoir/icons/plus.svg';
 	import { getGroupNumbers, type GroupMethod, type Player } from './core';
+	import TextInput from './TextInput.svelte';
 
 	export let players: Player[] = [];
 	export let allowRemoval = true;
 	export let allowAddition = true;
-	export let groupCount: number | undefined;
+	export let groupCount: number;
 	export let groupMethod: GroupMethod = 'alternating';
 	let newPlayerName = '';
 	function addPlayer() {
@@ -18,33 +19,39 @@
 		players = players.filter((_player, idx) => idx !== playerIdx);
 	}
 
-	$: groupNumbers = groupCount ? getGroupNumbers(players.length, groupCount, groupMethod) : null;
+	$: groupNumbers = getGroupNumbers(players.length, groupCount, groupMethod);
 </script>
 
 <fieldset>
 	<legend>Players</legend>
-	<ul>
-		{#each players as player, idx}
-			<li>
-				{#if groupNumbers}
-					Group {groupNumbers[idx] + 1}
-				{/if}
-				<label for={`player-name-${idx}`}>Player {idx + 1} </label>
-				<input type="text" value={player.name} name="playerName" id={`player-name-${idx}`} />
-				{#if allowRemoval}
-					<button on:click|preventDefault={() => removePlayer(idx)}
-						><img src={Trash} alt="delete" /></button
-					>
-				{/if}
-			</li>
-		{/each}
-	</ul>
+	{#each players as player, idx}
+		<TextInput
+			id={`player-name-${idx}`}
+			name="playerName"
+			label={`Name (Group ${groupNumbers[idx] + 1})`}
+			value={player.name}
+		>
+			{#if allowRemoval}
+				<button on:click|preventDefault={() => removePlayer(idx)}
+					><img src={Trash} alt="delete" /></button
+				>
+			{/if}
+		</TextInput>
+	{/each}
 
 	{#if allowAddition}
 		<form on:submit|preventDefault={addPlayer}>
-			<label for="new-player-name">Player Name</label>
-			<input type="text" id="new-player-name" bind:value={newPlayerName} />
-			<button type="submit"><img src={Plus} alt="add user" /></button>
+			<TextInput id="new-player-name" label="Player Name" bind:value={newPlayerName}>
+				<button type="submit"><img src={Plus} alt="add user" /></button>
+			</TextInput>
 		</form>
 	{/if}
 </fieldset>
+
+<style>
+	fieldset {
+		margin: 0;
+		padding: 10px;
+		width: fit-content;
+	}
+</style>

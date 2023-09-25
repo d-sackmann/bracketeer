@@ -2,6 +2,7 @@
 	import RadioGroup from '$lib/RadioGroup.svelte';
 	import EditablePlayerList from '$lib/EditablePlayerList.svelte';
 	import type { GroupMethod, Player } from '$lib/core';
+	import TextInput from '$lib/TextInput.svelte';
 
 	let groupMethod: GroupMethod = 'alternating';
 	let groupCount = 1;
@@ -39,11 +40,6 @@
 </script>
 
 <form method="POST" action="/contests">
-	<div>
-		<label for="contest-name">Name:</label>
-		<input name="contestName" id="contest-name" />
-	</div>
-
 	<EditablePlayerList {groupCount} {groupMethod} bind:players />
 
 	<RadioGroup
@@ -59,6 +55,7 @@
 		bind:value={groupMethod}
 	/>
 	<RadioGroup label="Series length" options={seriesLengths} name="gamesToWin" value={2} />
+	<TextInput id="contest-name" name="contestName" label="Name" />
 
 	<button type="submit">Go</button>
 </form>

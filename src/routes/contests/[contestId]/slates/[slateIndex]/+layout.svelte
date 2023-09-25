@@ -5,29 +5,31 @@
 	import type { Player } from '$lib/core';
 	import { keyBy } from '$lib/utils';
 	import ResultList from '$lib/ResultList.svelte';
+	import { getSlateUrl } from '$lib/urlHelpers';
 
 	export let data: LayoutData;
 
 	$: playersById = keyBy(data.players, (p) => p.id as keyof Player);
-	$: orderedSlates = data.contest.slates
-		.slice(data.slateIndex)
-		.concat(data.contest.slates.slice(0, data.slateIndex));
-
-	function getOriginalSlateIndex(slateId: string) {
-		return data.contest.slates.findIndex(({ id }) => slateId === id);
-	}
+	$: slate = data.contest.slates[data.slateIndex];
 </script>
 
-{#each orderedSlates as slate}
-	<MatchDisplay
-		{slate}
-		slateIndex={getOriginalSlateIndex(slate.id)}
-		contestId={data.contestId}
-		{playersById}
-		openScore={{ matchId: $page.data.matchId, gameIdx: $page.data.gameIdx }}><slot /></MatchDisplay
-	>
-	<ResultList {slate} {playersById} />
-{/each}
+<nav>
+	{#each data.contest.slates as slate, i}
+		<span><a href={getSlateUrl({ contestId: data.contestId, slateIndex: i })}>{slate.name}</a></span
+		>
+	{/each}
+</nav>
+
+<MatchDisplay
+	{slate}
+	slateIndex={data.slateIndex}
+	contestId={data.contestId}
+	{playersById}
+	openScore={{ matchId: $page.data.matchId, gameIdx: $page.data.gameIdx }}
+>
+	<slot />
+</MatchDisplay>
+<ResultList {slate} {playersById} />
 
 <style>
 	:global(table) {

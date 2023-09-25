@@ -24,7 +24,9 @@
 
 	page.subscribe((p) => {
 		if (p.form?.success) {
-			goto(getSlateUrl({ contestId: data.contestId, slateIndex: data.slateIndex }));
+			goto(getSlateUrl({ contestId: data.contestId, slateIndex: data.slateIndex }), {
+				noScroll: true
+			});
 		}
 	});
 </script>

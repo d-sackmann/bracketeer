@@ -31,35 +31,57 @@
 	}
 </script>
 
-<table>
-	<tr>
-		<th>VS</th>
-		{#each slate.players as opponentId}
-			<th scope="col">{playersById[opponentId]?.name || 'Unknown'}</th>
-		{/each}
-		<th>Wins</th>
-	</tr>
-	{#each orderedResults as orderedResult (orderedResult.player.id)}
+<div class="table-container">
+	<h4 class="table-title">Match Results</h4>
+	<table>
 		<tr>
-			<th scope="row">{orderedResult.player.name}</th>
+			<th />
 			{#each slate.players as opponentId}
-				{@const matchResultForOpponent = orderedResult.results.find((r) =>
-					r.opponents.includes(opponentId)
-				)}
-				<td>
-					{#if opponentId === orderedResult.player.id}
-						n/a
-					{:else if !matchResultForOpponent}
-						Missing!
-					{:else}
-						<Score
-							scores={[matchResultForOpponent.gamesWon, matchResultForOpponent.gamesLost]}
-							decided={isDecided(matchResultForOpponent.outcome)}
-						/>
-					{/if}
-				</td>
+				<th scope="col" class="rotate"
+					><div><span>{playersById[opponentId]?.name || 'Unknown'}</span></div></th
+				>
 			{/each}
-			<td>{tally(orderedResult.results, ({ outcome }) => outcome === 'win')}</td>
+			<th class="rotate"><div><span>Wins</span></div></th>
 		</tr>
-	{/each}
-</table>
+		{#each orderedResults as orderedResult (orderedResult.player.id)}
+			<tr>
+				<th scope="row">{orderedResult.player.name}</th>
+				{#each slate.players as opponentId}
+					{@const matchResultForOpponent = orderedResult.results.find((r) =>
+						r.opponents.includes(opponentId)
+					)}
+					<td>
+						{#if opponentId === orderedResult.player.id}
+							<!-- nothing -->
+						{:else if !matchResultForOpponent}
+							Missing!
+						{:else}
+							<Score
+								scores={[matchResultForOpponent.gamesWon, matchResultForOpponent.gamesLost]}
+								decided={isDecided(matchResultForOpponent.outcome)}
+							/>
+						{/if}
+					</td>
+				{/each}
+				<td>{tally(orderedResult.results, ({ outcome }) => outcome === 'win')}</td>
+			</tr>
+		{/each}
+	</table>
+</div>
+
+<style>
+	.table-container {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-around;
+	}
+
+	.table-title {
+		flex-basis: 50px;
+	}
+	th[scope='row'] {
+		overflow: hidden;
+		white-space: nowrap;
+		max-width: 100px;
+	}
+</style>

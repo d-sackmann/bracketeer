@@ -26,4 +26,8 @@
 	.winner {
 		font-weight: bold;
 	}
+
+	span {
+		font-family: 'Courier New', Courier, monospace;
+	}
 </style>
