@@ -1,19 +1,11 @@
 <script lang="ts">
 	export let scores: number[];
 
-	export let decided = false;
-	let winnerIdx: number | null = null;
-	$: {
-		winnerIdx = scores[0] - scores[1] > 0 ? 0 : 1;
-
-		if (!decided || scores[0] === scores[1]) {
-			winnerIdx = null;
-		}
-	}
+	export let highlightedIdx: number | null = null;
 	function getScoreClass(idx: number): string {
 		const classes = ['score', 'score-' + idx];
-		if (winnerIdx === idx) {
-			classes.push('winner');
+		if (highlightedIdx === idx) {
+			classes.push('highlighted');
 		}
 
 		return classes.join(' ');
@@ -23,7 +15,7 @@
 <span class={getScoreClass(0)}>{scores[0]}</span>-<span class={getScoreClass(1)}>{scores[1]}</span>
 
 <style>
-	.winner {
+	.highlighted {
 		font-weight: bold;
 	}
 

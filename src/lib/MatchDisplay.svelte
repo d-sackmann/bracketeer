@@ -1,53 +1,51 @@
 <script lang="ts">
-	import { determineGameOutcome, isDecided, type Player, type Slate } from '$lib/core';
+	import type { Player, Slate } from '$lib/core';
 	import Score from './Score.svelte';
+	import type { PlayerColor } from './playerColors';
 	import { getGameUrl } from './urlHelpers';
 
 	export let slate: Slate;
 	export let playersById: Record<string, Player>;
+	export let playerColors: Record<string, PlayerColor>;
 	export let contestId: string;
 	export let slateIndex: number;
 	export let openScore: { matchId: string; gameIdx: number };
 </script>
 
-<div class="table-container">
-	<h4 class="table-title">Game Results</h4>
-	<table>
+<table>
+	<tr>
+		<th scope="row">Game</th>
+		{#each slate.matches[0].games as _, i}
+			<th scope="col">{i + 1}</th>
+		{/each}
+	</tr>
+	{#each slate.matches as match (match.id)}
 		<tr>
-			<th />
-			{#each slate.matches[0].games as _, i}
-				<th scope="col" class="rotate"><div><span>Game {i + 1}</span></div></th>
+			<th scope="row">
+				<span style={`color: ${playerColors[match.players[0]]}`}
+					>{playersById[match.players[0]]?.name || 'Unknown'}</span
+				>
+				vs.
+				<span style={`color: ${playerColors[match.players[1]]}`}
+					>{playersById[match.players[1]]?.name || 'Unknown'}</span
+				>
+			</th>
+			{#each match.games as _, i}
+				<td class={openScore.matchId === match.id && openScore.gameIdx === i ? 'open-score' : ''}>
+					<a href={getGameUrl({ contestId, slateIndex, matchId: match.id, gameIndex: i })}>
+						<Score scores={match.games[i].score} />
+					</a>
+				</td>
 			{/each}
 		</tr>
-		{#each slate.matches as match (match.id)}
-			<tr>
-				<th scope="row">
-					<div>{playersById[match.players[0]]?.name || 'Unknown'}</div>
-					<div>vs.</div>
-					<div>{playersById[match.players[1]]?.name || 'Unknown'}</div>
-				</th>
-				{#each match.games as _, i}
-					<td class={openScore.matchId === match.id && openScore.gameIdx === i ? 'open-score' : ''}>
-						<a href={getGameUrl({ contestId, slateIndex, matchId: match.id, gameIndex: i })}
-							><Score
-								scores={match.games[i].score}
-								decided={isDecided(
-									determineGameOutcome(match.games[i].score[0], match.games[i].score[1])
-								)}
-							/></a
-						>
-					</td>
-				{/each}
+		{#if openScore.matchId === match.id}
+			<tr class="score-input">
+				<td />
+				<td colspan={match.games.length}><slot /></td>
 			</tr>
-			{#if openScore.matchId === match.id}
-				<tr class="score-input">
-					<td />
-					<td colspan={match.games.length}><slot /></td>
-				</tr>
-			{/if}
-		{/each}
-	</table>
-</div>
+		{/if}
+	{/each}
+</table>
 
 <style>
 	.open-score,
@@ -57,21 +55,5 @@
 
 	td {
 		outline: 1px solid white;
-	}
-
-	.table-container {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-around;
-	}
-
-	.table-title {
-		flex-basis: 80px;
-	}
-
-	th[scope='row'] {
-		overflow: hidden;
-		white-space: nowrap;
-		max-width: 100px;
 	}
 </style>

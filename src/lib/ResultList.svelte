@@ -5,83 +5,137 @@
 		getIndividualResults,
 		type MatchResult,
 		resultComparator,
-		isDecided
+		type MatchResultsComparison
 	} from '$lib/core';
+	import { slide } from 'svelte/transition';
+	import Collapsible from './Collapsible.svelte';
 	import Score from './Score.svelte';
+	import type { PlayerColor } from './playerColors';
 	import { tally } from './utils';
 	export let slate: Slate;
 	export let playersById: Record<string, Player>;
+	export let playerColors: Record<string, PlayerColor>;
 
-	let orderedResults: { player: Player; results: MatchResult[] }[];
+	let resultsByPlayer: { player: Player; results: MatchResult[] }[];
+	let comparisons: Record<string, Record<string, MatchResultsComparison>> = {};
 
 	$: playerList = slate.players.map((id) => playersById[id]).filter((x) => x);
 
 	$: {
-		orderedResults = playerList
-			.map((player) => {
-				return {
-					results: getIndividualResults(player.id, slate),
-					player: player
-				};
-			})
-			.sort((a, b) => {
-				const { value } = resultComparator(a.results, b.results);
-				return value;
+		resultsByPlayer = playerList.map((player) => {
+			const results = getIndividualResults(player.id, slate);
+			return {
+				results,
+				player: player
+			};
+		});
+
+		resultsByPlayer.forEach(({ player: currentPlayer, results: currentResults }) => {
+			const comparisonsForPlayer = comparisons[currentPlayer.id] || {};
+			resultsByPlayer.forEach(({ player: comparisonPlayer, results: comparisonResults }) => {
+				if (currentPlayer.id !== comparisonPlayer.id) {
+					comparisonsForPlayer[comparisonPlayer.id] = resultComparator(
+						currentResults,
+						comparisonResults
+					);
+				}
 			});
+			comparisons[currentPlayer.id] = comparisonsForPlayer;
+		});
+
+		resultsByPlayer.sort((a, b) => {
+			return comparisons[a.player.id][b.player.id].value;
+		});
+	}
+
+	function calulateRank(playerId: string): number {
+		const otherPlayers = playerList.filter(({ id }) => id !== playerId);
+		return (
+			tally(
+				otherPlayers.map(({ id }) => comparisons[playerId][id].value),
+				(v) => v > 0
+			) + 1
+		);
 	}
 </script>
 
-<div class="table-container">
-	<h4 class="table-title">Match Results</h4>
-	<table>
-		<tr>
-			<th />
-			{#each slate.players as opponentId}
-				<th scope="col" class="rotate"
-					><div><span>{playersById[opponentId]?.name || 'Unknown'}</span></div></th
+{#each resultsByPlayer as playerResult (playerResult.player.id)}
+	<div transition:slide>
+		<Collapsible theme={playerColors[playerResult.player.id]}>
+			<div slot="header" class="result-header">
+				<span class="player-name">{playerResult.player.name}</span>
+				<span class="win-total"
+					>Match Wins: {tally(playerResult.results, ({ outcome }) => outcome === 'win')}</span
 				>
-			{/each}
-			<th class="rotate"><div><span>Wins</span></div></th>
-		</tr>
-		{#each orderedResults as orderedResult (orderedResult.player.id)}
-			<tr>
-				<th scope="row">{orderedResult.player.name}</th>
-				{#each slate.players as opponentId}
-					{@const matchResultForOpponent = orderedResult.results.find((r) =>
-						r.opponents.includes(opponentId)
-					)}
-					<td>
-						{#if opponentId === orderedResult.player.id}
-							<!-- nothing -->
-						{:else if !matchResultForOpponent}
-							Missing!
-						{:else}
+				<span class="rank">Rank: {calulateRank(playerResult.player.id)}</span>
+			</div>
+			<div slot="content" class="player-results-container">
+				<div class="comparisons-container">
+					{#each playerResult.results as resultVsOpponent (resultVsOpponent.matchId)}
+						{@const opponent = playersById[resultVsOpponent.opponents[0]]}
+						<div>
+							Result vs: {opponent.name}:
 							<Score
-								scores={[matchResultForOpponent.gamesWon, matchResultForOpponent.gamesLost]}
-								decided={isDecided(matchResultForOpponent.outcome)}
+								scores={[resultVsOpponent.gamesWon, resultVsOpponent.gamesLost]}
+								highlightedIdx={0}
 							/>
-						{/if}
-					</td>
-				{/each}
-				<td>{tally(orderedResult.results, ({ outcome }) => outcome === 'win')}</td>
-			</tr>
-		{/each}
-	</table>
-</div>
+						</div>
+					{/each}
+				</div>
+
+				<div class="comparisons-container">
+					<ul class="explanation list">
+						{#each playerResult.results as resultVsOpponent (resultVsOpponent.matchId)}
+							{@const opponent = playersById[resultVsOpponent.opponents[0]]}
+							{@const comparison = comparisons[playerResult.player.id][opponent.id]}
+							{@const isWin = comparison.value < 0}
+							{#if comparison.rule !== 'matches'}
+								<li class="tie-explanation">
+									{#if comparison.rule === 'default'}
+										Currently tied with {opponent.name}
+									{:else if comparison.rule === 'head2head'}
+										Tie with {opponent.name} resolved by taking the winner of the head to head match
+										up.
+										{playerResult.player.name}
+										{isWin ? 'won' : 'lost'} their match against {opponent.name}
+									{:else if comparison.rule === 'points'}
+										Tie with {opponent.name} resolved by point differential. {opponent.name} had a the
+										{isWin ? 'lower' : 'higher'} differential by {Math.abs(comparison.value)}
+									{:else if comparison.rule === 'games'}
+										Tie with {opponent.name} resolved by comparing number of games lost. {opponent.name}
+										lost
+										{Math.abs(comparison.value)}
+										{isWin ? 'more' : 'fewer'}
+										{Math.abs(comparison.value) === 1 ? 'game' : 'games'} than {playerResult.player
+											.name}
+									{/if}
+								</li>
+							{/if}
+						{/each}
+					</ul>
+				</div>
+			</div>
+		</Collapsible>
+	</div>
+{/each}
 
 <style>
-	.table-container {
+	.result-header {
 		display: flex;
-		flex-direction: column;
-		justify-content: space-around;
+		padding: 5px;
 	}
 
-	.table-title {
-		flex-basis: 50px;
+	.win-total {
+		margin-left: auto;
 	}
-	th[scope='row'] {
-		overflow: hidden;
-		white-space: nowrap;
-		max-width: 100px;
+	.rank {
+		margin-left: 5px;
+	}
+	.player-results-container {
+		text-align: left;
+	}
+
+	.comparisons-container {
+		padding: 5px;
 	}
 </style>

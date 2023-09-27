@@ -6,17 +6,23 @@
 	import { keyBy } from '$lib/utils';
 	import ResultList from '$lib/ResultList.svelte';
 	import { getSlateUrl } from '$lib/urlHelpers';
+	import { ALL_COLORS } from '$lib/playerColors';
 
 	export let data: LayoutData;
 
 	$: playersById = keyBy(data.players, (p) => p.id as keyof Player);
 	$: slate = data.contest.slates[data.slateIndex];
+	$: playerColors = slate.players.reduce(
+		(acc, playerId, i) => ({ ...acc, [playerId]: ALL_COLORS[i % ALL_COLORS.length] }),
+		{}
+	);
 </script>
 
 <nav>
 	{#each data.contest.slates as slate, i}
-		<span><a href={getSlateUrl({ contestId: data.contestId, slateIndex: i })}>{slate.name}</a></span
-		>
+		<span>
+			<a href={getSlateUrl({ contestId: data.contestId, slateIndex: i })}>{slate.name}</a>
+		</span>
 	{/each}
 </nav>
 
@@ -25,11 +31,12 @@
 	slateIndex={data.slateIndex}
 	contestId={data.contestId}
 	{playersById}
+	{playerColors}
 	openScore={{ matchId: $page.data.matchId, gameIdx: $page.data.gameIdx }}
 >
 	<slot />
 </MatchDisplay>
-<ResultList {slate} {playersById} />
+<ResultList {slate} {playersById} {playerColors} />
 
 <style>
 	:global(table) {
