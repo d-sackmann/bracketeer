@@ -1,12 +1,12 @@
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { getContest, getPlayersForContest } from '$lib/server/database/contests';
+import { getContestSummary, getPlayersForContest } from '$lib/server/database/contests';
 
 export const load: LayoutServerLoad = async ({ params }) => {
 	let contest, players;
 
 	try {
-		contest = getContest(params.contestId);
+		contest = getContestSummary(params.contestId);
 	} catch (e) {
 		console.error(`Error retrieving contest data ${e}`);
 		throw error(404, 'Not found');

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { Match, Player, Slate } from '$lib/core';
-	import type { Writable } from 'svelte/store';
+	import type { Match, Player } from '$lib/core';
 	import Score from './Score.svelte';
 	import ScoreInput from './ScoreInput.svelte';
 	import { getColorScheme, type PlayerColor } from './playerColors';
+	import type { SlateStore } from './slateStore';
 
-	export let slate: Writable<Slate>;
+	export let slate: SlateStore;
 	export let playersById: Record<string, Player>;
 	export let playerColors: Record<string, PlayerColor>;
 
@@ -29,35 +29,7 @@
 
 	function handleScoreSaved(gameIdentifier: GameIdentifier | null, score: number[]) {
 		if (!gameIdentifier) return;
-		slate.update((oldSlateValue) => {
-			console.log(JSON.stringify(oldSlateValue));
-			const matchIdx = oldSlateValue.matches.findIndex(({ id }) => id === gameIdentifier.matchId);
-			const match = oldSlateValue.matches[matchIdx];
-			const game = match?.games[gameIdentifier.gameIndex];
-			if (!game) {
-				return oldSlateValue;
-			}
-
-			const updatedMatch = {
-				...match,
-				games: match.games
-					.slice(0, gameIdentifier.gameIndex)
-					.concat([{ score }])
-					.concat(match.games.slice(gameIdentifier.gameIndex + 1))
-			};
-
-			const newValue = {
-				...oldSlateValue,
-				matches: oldSlateValue.matches
-					.slice(0, matchIdx)
-					.concat([updatedMatch])
-					.concat(oldSlateValue.matches.slice(matchIdx + 1))
-			};
-
-			console.log(JSON.stringify(newValue));
-
-			return newValue;
-		});
+		slate.updateScore(gameIdentifier, score);
 		closeScoreInput();
 	}
 </script>

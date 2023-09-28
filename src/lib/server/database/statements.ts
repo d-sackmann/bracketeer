@@ -64,23 +64,34 @@ order by p.name`
 	)
 );
 
-export type GetFullContestStmtRow = {
+export type ContestSummaryRow = {
 	contestId: string;
 	contestName: string;
+	joinCode: string;
+	playersPerGame: number;
 	slateName: string;
-	slateId: string;
-	gamesToWin: number;
+	slateIdx: number;
+};
+export const getContestSummaryStmt = statementFactory((db) =>
+	db.prepare(`
+	SELECT c.id contestId,
+    c.name contestName,
+    c.joinCode joinCode,
+    c.playersPerGame playersPerGame,
+    s.name slateName,
+    s.idx slateIdx
+FROM contest c
+    INNER JOIN slate s on s.contestId = c.id
+WHERE c.id = :contestId
+ORDER BY slateIdx
+`)
+);
+
+export type GetFullContestStmtRow = GetFullSlateStmtRow & {
+	contestId: string;
+	contestName: string;
 	playersPerGame: number;
 	joinCode: string;
-	matchId: string;
-	matchIdx: number;
-	player1Id: string;
-	player2Id: string;
-	player1Name: string;
-	player2Name: string;
-	player1Score: number | null;
-	player2Score: number | null;
-	gameIdx: number | null;
 };
 export const getFullContestStmt = statementFactory((db) =>
 	db.prepare(`
@@ -124,6 +135,57 @@ order by slateIdx,
 	`)
 );
 
+export type GetFullSlateStmtRow = {
+	slateName: string;
+	slateId: string;
+	gamesToWin: number;
+	matchId: string;
+	matchIdx: number;
+	player1Id: string;
+	player2Id: string;
+	player1Name: string;
+	player2Name: string;
+	player1Score: number | null;
+	player2Score: number | null;
+	gameIdx: number | null;
+};
+export const getFullSlateStmt = statementFactory((db) =>
+	db.prepare(`
+	SELECT
+    slate.name slateName,
+	slate.gamesToWin gamesToWin,
+	slate.idx slateIdx,
+	contest.id contestId,
+    match.id matchId,
+    match.idx matchIdx,
+    mPlayer1.playerId player1Id,
+    mPlayer2.playerId player2Id,
+    player1.name player1Name,
+    player2.name player2Name,
+	gameScore1.value as player1Score,
+	gameScore2.value as player2Score,
+	game.idx as gameIdx
+from match
+    inner join matchPlayer as mPlayer1 on (
+        mPlayer1.matchId = match.id
+        and mPlayer1.idx = 0
+    )
+    inner join matchPlayer as mPlayer2 on (
+        mPlayer2.matchId = match.id
+        and mPlayer2.idx = 1
+    )
+    inner join player as player1 on mplayer1.playerId = player1.id
+    inner join player as player2 on mplayer2.playerId = player2.id
+    inner join slate on slate.id = match.slateId
+    inner join contest on slate.contestId = contest.id
+	inner join game on game.matchId = match.id
+	inner join gameScore as gameScore1 on (gameScore1.playerId = player1.id AND gameScore1.gameIdx = game.idx AND gameScore1.matchId = match.id) 
+	inner join gameScore as gameScore2 on (gameScore2.playerId = player2.id AND gameScore2.gameIdx = game.idx AND gameScore2.matchId = match.id) 
+where contestId = :contestId AND slateIdx = :slateIndex
+order by matchIdx, gameIdx
+;
+	`)
+);
 export type ContestListRow = {
 	name: string;
 	id: string;
@@ -145,4 +207,11 @@ export const createGameScoreStatement = statementFactory((db) =>
 
 export const getGameStatement = statementFactory((db) =>
 	db.prepare(`SELECT matchId, idx from game where matchId = :matchId AND idx = :gameIdx`)
+);
+
+export type SlateIdentifierRow = { slateIndex: number; contestId: string };
+export const getSlateByMatchStmt = statementFactory((db) =>
+	db.prepare(
+		`select s.idx slateIndex, s.contestId contestId FROM slate s inner join match on match.slateId = s.id where match.id = :matchId`
+	)
 );

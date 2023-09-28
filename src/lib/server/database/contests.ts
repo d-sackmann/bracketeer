@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import { v4 as uuid } from 'uuid';
 import getDatabase from './initializeDb';
 import {
@@ -14,9 +15,14 @@ import {
 	type GetPlayersRow,
 	listContestsStmt,
 	type ContestListRow,
-	createGameStmt
+	createGameStmt,
+	getSlateByMatchStmt,
+	type SlateIdentifierRow,
+	getFullSlateStmt,
+	type ContestSummaryRow,
+	getContestSummaryStmt
 } from './statements';
-import type { Contest, Player, Slate } from '$lib/core';
+import type { Contest, Match, Player, Slate } from '$lib/core';
 
 type NewMatch = {
 	id: string;
@@ -109,6 +115,30 @@ export function createNewContest(contestData: NewContest) {
 	return contestId;
 }
 
+type ContestSummary = {
+	name: string;
+	playersPerGame: number;
+	joinCode: string;
+	slates: { name: string }[];
+};
+export function getContestSummary(contestId: string): ContestSummary {
+	const rows = getContestSummaryStmt.all({ contestId }) as ContestSummaryRow[];
+
+	return rows.reduce(
+		(acc, nextRow) => {
+			acc.slates.push({ name: nextRow.slateName });
+
+			return acc;
+		},
+		{
+			name: rows[0].contestName,
+			playersPerGame: rows[0].playersPerGame,
+			joinCode: rows[0].joinCode,
+			slates: [] as { name: string }[]
+		}
+	);
+}
+
 export function getContest(contestId: string): Contest {
 	const contestRows = getFullContestStmt.all({ contestId }) as GetFullContestStmtRow[];
 
@@ -167,6 +197,44 @@ export function getPlayersForContest(contestId: string): Player[] {
 	return players;
 }
 
+export function getSlate(contestId: string, slateIndex: number): Slate {
+	const contestRows = getFullSlateStmt.all({ contestId, slateIndex }) as GetFullContestStmtRow[];
+
+	if (contestRows.length < 1) {
+		throw new Error(`No slate found with id ${contestId} and slate index ${slateIndex}`);
+	}
+
+	const players: string[] = [];
+
+	const matches = contestRows.reduce((matchAcc, row) => {
+		if (matchAcc.length <= row.matchIdx) {
+			matchAcc.push({
+				id: row.matchId,
+				players: [row.player1Id, row.player2Id],
+				games: []
+			});
+		}
+
+		const match = matchAcc[matchAcc.length - 1];
+		match.games.push({ score: [row.player1Score || 0, row.player2Score || 0] });
+
+		[row.player1Id, row.player2Id].forEach((playerId) => {
+			if (!players.includes(playerId)) {
+				players.push(playerId);
+			}
+		});
+
+		return matchAcc;
+	}, [] as Match[]);
+	return {
+		gamesToWin: contestRows[0].gamesToWin,
+		name: contestRows[0].slateName,
+		id: contestRows[0].slateId,
+		matches,
+		players
+	};
+}
+
 type ContestListEntry = {
 	name: string;
 	id: string;
@@ -182,6 +250,11 @@ export function listContests(): ContestListEntry[] {
 	});
 }
 
+export const gameScoreUpdatesEmitter = new EventEmitter();
+
+gameScoreUpdatesEmitter.on('error', (e) => {
+	console.error(`Error from gameUpdates Emitter ${e}`);
+});
 export function updateGameScores(
 	matchId: string,
 	gameIdx: number,
@@ -192,4 +265,12 @@ export function updateGameScores(
 			createGameScoreStatement.run({ matchId, gameIdx, playerId, value });
 		});
 	})();
+
+	const slate = getSlateByMatchStmt.get({ matchId }) as SlateIdentifierRow;
+	gameScoreUpdatesEmitter.emit('score-change', {
+		matchId,
+		gameIdx,
+		scores: scores.map(({ value }) => value),
+		...slate
+	});
 }

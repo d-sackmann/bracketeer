@@ -1,5 +1,5 @@
-import { updateGameScores } from '$lib/server/database/contests';
-import type { Actions } from './$types';
+import { getSlate, updateGameScores } from '$lib/server/database/contests';
+import type { Actions, PageServerLoad } from './$types';
 
 export const actions = {
 	default: async ({ request }) => {
@@ -23,3 +23,10 @@ export const actions = {
 		};
 	}
 } satisfies Actions;
+
+export const load: PageServerLoad = ({ params }) => {
+	const slateIndex = parseInt(params.slateIndex)
+	const slate = getSlate(params.contestId, slateIndex);
+
+	return { slate, slateIndex };
+};
