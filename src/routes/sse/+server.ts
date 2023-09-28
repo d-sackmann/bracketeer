@@ -20,7 +20,8 @@ export async function GET(event: RequestEvent) {
 		headers: {
 			'Cache-Control': 'no-store',
 			'Content-Type': 'text/event-stream',
-			Connection: 'keep-alive'
+			Connection: 'keep-alive',
+			'X-Accel-Buffering': 'no' // Prevent nginx from buffering the events
 		}
 	});
 }
