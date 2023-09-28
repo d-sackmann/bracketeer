@@ -5,6 +5,7 @@ type Listener = {
 	contestId: string;
 	slateIndex: number;
 	fn: ((e: ScoreChangeEvent) => void) | null;
+	intervalHandle: NodeJS.Timeout;
 };
 
 const listenersBySession: Record<string, Listener> = {};
@@ -46,13 +47,19 @@ export function registerListener({ contestId, slateIndex }: SlateIdentifier, ses
 			};
 			gameScoreUpdatesEmitter.on('score-change', listener);
 
+			const interval = setInterval(() => {
+				controller.enqueue(':beat\n\n');
+			}, 5000);
 			listenersBySession[sessionId] = {
 				...listenersBySession[sessionId],
-				fn: listener
+				fn: listener,
+				intervalHandle: interval
 			};
 		},
 
 		cancel() {
+			clearInterval(listenersBySession[sessionId].intervalHandle);
+
 			const listenerToRemove = listenersBySession[sessionId]?.fn;
 			if (listenerToRemove) {
 				gameScoreUpdatesEmitter.removeListener('score-change', listenerToRemove);

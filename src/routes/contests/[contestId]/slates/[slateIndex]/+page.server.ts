@@ -25,7 +25,7 @@ export const actions = {
 } satisfies Actions;
 
 export const load: PageServerLoad = ({ params }) => {
-	const slateIndex = parseInt(params.slateIndex)
+	const slateIndex = parseInt(params.slateIndex);
 	const slate = getSlate(params.contestId, slateIndex);
 
 	return { slate, slateIndex };
