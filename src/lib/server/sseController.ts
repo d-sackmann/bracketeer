@@ -48,7 +48,7 @@ export function registerListener({ contestId, slateIndex }: SlateIdentifier, ses
 			gameScoreUpdatesEmitter.on('score-change', listener);
 
 			const interval = setInterval(() => {
-				controller.enqueue(':beat\n\n');
+				controller.enqueue(`event: ping\ndata: ${Date.now()}\n\n`);
 			}, 5000);
 			listenersBySession[sessionId] = {
 				...listenersBySession[sessionId],
