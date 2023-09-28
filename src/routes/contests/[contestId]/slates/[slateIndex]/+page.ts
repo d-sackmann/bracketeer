@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import type { LayoutLoad } from './$types';
+import type { PageLoad } from './$types';
 
-export const load: LayoutLoad = async (event) => {
+export const load: PageLoad = async (event) => {
 	const slateIndex = parseInt(event.params.slateIndex);
 
 	const parent = await event.parent();

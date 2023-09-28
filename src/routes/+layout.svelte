@@ -70,11 +70,18 @@
 		text-align: center;
 		outline: 1px solid var(--primary-text-color);
 
-		padding: 10px 5px;
-
 		border-right: var(--table-border-width) solid gray;
 		min-width: 30px;
-		padding-top: 2px;
-		padding-left: 5px;
+	}
+
+	:global(button.no-button-style) {
+		background: none;
+		color: inherit;
+		border: none;
+		padding: 0;
+		font: inherit;
+		cursor: pointer;
+		outline: inherit;
+		width: 100%;
 	}
 </style>

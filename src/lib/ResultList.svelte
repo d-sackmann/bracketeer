@@ -7,23 +7,25 @@
 		resultComparator,
 		type MatchResultsComparison
 	} from '$lib/core';
-	import { slide } from 'svelte/transition';
+	import type { Readable } from 'svelte/store';
+
 	import Collapsible from './Collapsible.svelte';
 	import Score from './Score.svelte';
 	import type { PlayerColor } from './playerColors';
 	import { tally } from './utils';
-	export let slate: Slate;
+	import { flip } from 'svelte/animate';
+	export let slate: Readable<Slate>;
 	export let playersById: Record<string, Player>;
 	export let playerColors: Record<string, PlayerColor>;
 
 	let resultsByPlayer: { player: Player; results: MatchResult[] }[];
 	let comparisons: Record<string, Record<string, MatchResultsComparison>> = {};
 
-	$: playerList = slate.players.map((id) => playersById[id]).filter((x) => x);
+	$: playerList = $slate.players.map((id) => playersById[id]).filter((x) => x);
 
 	$: {
 		resultsByPlayer = playerList.map((player) => {
-			const results = getIndividualResults(player.id, slate);
+			const results = getIndividualResults(player.id, $slate);
 			return {
 				results,
 				player: player
@@ -60,8 +62,8 @@
 </script>
 
 {#each resultsByPlayer as playerResult (playerResult.player.id)}
-	<div transition:slide>
-		<Collapsible theme={playerColors[playerResult.player.id]}>
+	<div animate:flip>
+		<Collapsible color={playerColors[playerResult.player.id]}>
 			<div slot="header" class="result-header">
 				<span class="player-name">{playerResult.player.name}</span>
 				<span class="win-total"
