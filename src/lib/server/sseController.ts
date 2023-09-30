@@ -1,9 +1,6 @@
 import { gameScoreUpdatesEmitter } from '$lib/server/database/contests';
 
 type Listener = {
-	sessionId: string;
-	contestId: string;
-	slateIndex: number;
 	fn: ((e: ScoreChangeEvent) => void) | null;
 	intervalHandle: NodeJS.Timeout;
 };
@@ -23,7 +20,13 @@ type ScoreChangeEvent = SlateIdentifier & {
 export function registerListener({ contestId, slateIndex }: SlateIdentifier, sessionId: string) {
 	const existingListener = listenersBySession[sessionId];
 	if (existingListener && existingListener.fn) {
-		gameScoreUpdatesEmitter.removeListener('score-change', existingListener.fn);
+		if (existingListener.fn) {
+			gameScoreUpdatesEmitter.removeListener('score-change', existingListener.fn);
+		}
+
+		if (existingListener.intervalHandle) {
+			clearInterval(existingListener.intervalHandle);
+		}
 	}
 
 	listenersBySession[sessionId] = existingListener || {};
@@ -67,11 +70,5 @@ export function registerListener({ contestId, slateIndex }: SlateIdentifier, ses
 		}
 	});
 
-	listenersBySession[sessionId] = {
-		...listenersBySession[sessionId],
-		contestId,
-		slateIndex,
-		sessionId
-	};
 	return stream;
 }
