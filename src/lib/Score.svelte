@@ -12,7 +12,10 @@
 	}
 </script>
 
-<span class={getScoreClass(0)}>{scores[0]}</span>-<span class={getScoreClass(1)}>{scores[1]}</span>
+<div>
+	<span class={getScoreClass(0)}>{scores[0]}</span>-<span class={getScoreClass(1)}>{scores[1]}</span
+	>
+</div>
 
 <style>
 	.highlighted {
@@ -21,5 +24,12 @@
 
 	span {
 		font-family: 'Courier New', Courier, monospace;
+	}
+
+	div {
+		padding-top: 7px;
+		padding-bottom: 7px;
+		padding-left: 3px;
+		padding-right: 3px;
 	}
 </style>

@@ -44,6 +44,10 @@
 			bind:value={score.value}
 		/>
 		<input type="hidden" name="players" value={score.playerId} />
+
+		{#if i < scores.length - 1}
+			<span> - </span>
+		{/if}
 	{/each}
 
 	<input type="hidden" value={matchId} name="matchId" />
@@ -55,10 +59,12 @@
 	form {
 		border: none;
 		display: inline-flex;
+		font-size: xx-large;
 	}
 	input {
 		display: inline;
-		width: 27px;
+		width: 37px;
+		font-size: xx-large;
 	}
 
 	input::-webkit-outer-spin-button,
@@ -74,5 +80,6 @@
 
 	button {
 		display: inline;
+		margin-left: 12px;
 	}
 </style>

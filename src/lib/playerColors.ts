@@ -29,7 +29,7 @@ const colorsByTheme: Record<string, ColorScheme> = {
 	},
 	blue: {
 		primaryBg: '#001be7',
-		secondaryBg: '#001eff'
+		secondaryBg: '#004fff'
 	},
 	pink: {
 		primaryBg: '#ff33ff',

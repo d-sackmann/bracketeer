@@ -34,6 +34,10 @@
 		color: var(--primary-text-color);
 	}
 
+	:global(table) {
+		border-collapse: collapse;
+	}
+
 	:global(input) {
 		font-family: 'Courier New', Courier, monospace;
 
@@ -61,19 +65,6 @@
 		font-weight: normal;
 		text-align: left;
 	}
-
-	:global(table) {
-		border-collapse: collapse;
-		--table-border-width: 1px;
-	}
-	:global(td) {
-		text-align: center;
-		outline: 1px solid var(--primary-text-color);
-
-		border-right: var(--table-border-width) solid gray;
-		min-width: 30px;
-	}
-
 	:global(button.no-button-style) {
 		background: none;
 		color: inherit;

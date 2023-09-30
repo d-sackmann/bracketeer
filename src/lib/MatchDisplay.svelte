@@ -35,61 +35,80 @@
 </script>
 
 <table>
-	<tr>
-		<th scope="row">Game</th>
-		{#each $slate.matches[0].games as _, i}
-			<th scope="col">{i + 1}</th>
-		{/each}
-	</tr>
-	{#each $slate.matches as match (match.id)}
+	<thead>
 		<tr>
-			<th scope="row">
-				<span style={`color: ${getColorScheme(playerColors[match.players[0]]).secondaryBg}`}
-					>{playersById[match.players[0]]?.name || 'Unknown'}</span
-				>
-				vs.
-				<span style={`color: ${getColorScheme(playerColors[match.players[1]]).secondaryBg}`}
-					>{playersById[match.players[1]]?.name || 'Unknown'}</span
-				>
-			</th>
-			{#each match.games as _, i}
-				<td
-					class={selectedGame?.matchId === match.id && selectedGame?.gameIndex === i
-						? 'open-score'
-						: ''}
-				>
-					<button
-						class="no-button-style"
-						on:click={() => openScoreInput({ matchId: match.id, gameIndex: i })}
-					>
-						<Score scores={match.games[i].score} />
-					</button>
-				</td>
+			{#each $slate.matches[0].games as _, i}
+				<th class="col-header" scope="col">Game {i + 1}</th>
 			{/each}
 		</tr>
-		{#if selectedGame?.matchId === match.id}
-			<tr class="score-input">
-				<td />
+	</thead>
+	<tbody>
+		{#each $slate.matches as match (match.id)}
+			<tr><td class="spacer" colspan={match.games.length + 1} /></tr>
+
+			<tr>
 				<td colspan={match.games.length}>
-					<ScoreInput
-						scores={getScores(match, selectedGame.gameIndex)}
-						gameIndex={selectedGame.gameIndex}
-						matchId={selectedGame.matchId}
-						onScoreSaved={(score) => handleScoreSaved(selectedGame, score)}
-					/>
-				</td>
+					<span style={`color: ${getColorScheme(playerColors[match.players[0]]).secondaryBg}`}
+						>{playersById[match.players[0]]?.name || 'Unknown'}</span
+					>
+					vs.
+					<span style={`color: ${getColorScheme(playerColors[match.players[1]]).secondaryBg}`}
+						>{playersById[match.players[1]]?.name || 'Unknown'}</span
+					></td
+				>
 			</tr>
-		{/if}
-	{/each}
+			<tr>
+				{#each match.games as _, i}
+					<td
+						class={selectedGame?.matchId === match.id && selectedGame?.gameIndex === i
+							? 'open-score'
+							: ''}
+					>
+						<button
+							class="no-button-style"
+							on:click={() => openScoreInput({ matchId: match.id, gameIndex: i })}
+						>
+							<Score scores={match.games[i].score} />
+						</button>
+					</td>
+				{/each}
+			</tr>
+			{#if selectedGame?.matchId === match.id}
+				<tr>
+					<td class="score-input" colspan={match.games.length}>
+						<ScoreInput
+							scores={getScores(match, selectedGame.gameIndex)}
+							gameIndex={selectedGame.gameIndex}
+							matchId={selectedGame.matchId}
+							onScoreSaved={(score) => handleScoreSaved(selectedGame, score)}
+						/>
+					</td>
+				</tr>
+			{/if}
+		{/each}
+	</tbody>
 </table>
 
 <style>
+	.col-header {
+		min-width: 78px;
+	}
 	.open-score,
 	.score-input {
 		background-color: var(--secondary-accent-color);
+		box-sizing: border-box;
 	}
 
-	td {
+	td,
+	th {
 		outline: 1px solid white;
+	}
+
+	table {
+		table-layout: fixed;
+	}
+	.spacer {
+		outline: none;
+		padding-top: 20px;
 	}
 </style>

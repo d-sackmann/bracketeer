@@ -35,9 +35,3 @@
 		{playersById}
 	/>
 {/key}
-
-<style>
-	:global(table) {
-		border-collapse: collapse;
-	}
-</style>

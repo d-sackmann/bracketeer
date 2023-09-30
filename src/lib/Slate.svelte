@@ -42,9 +42,3 @@
 
 <MatchDisplay {slate} {playersById} {playerColors} />
 <ResultList {slate} {playersById} {playerColors} />
-
-<style>
-	:global(table) {
-		border-collapse: collapse;
-	}
-</style>

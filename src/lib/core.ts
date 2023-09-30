@@ -67,6 +67,16 @@ export function generateRoundRobinMatches(players: string[], gamesToWin: number)
 		);
 	}
 
+	// Shuffle the match order so 1 player doesn't have too many matches in a row
+	for (let i = 0; i < matches.length / 2; i++) {
+		if (i % 2) {
+			const matchToMove = matches[i];
+			const destIndex = matches.length - 1 - i;
+			matches[i] = matches[destIndex];
+			matches[destIndex] = matchToMove;
+		}
+	}
+
 	return matches;
 }
 
