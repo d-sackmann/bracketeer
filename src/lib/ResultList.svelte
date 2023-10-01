@@ -125,6 +125,7 @@
 	.result-header {
 		display: flex;
 		padding: 5px;
+		font-size: small;
 	}
 
 	.win-total {
@@ -139,5 +140,6 @@
 
 	.comparisons-container {
 		padding: 5px;
+		font-size: small;
 	}
 </style>

@@ -32,6 +32,7 @@
 		font-size: 20px;
 		background-color: var(--primary-bg-color);
 		color: var(--primary-text-color);
+		margin: 0;
 	}
 
 	:global(table) {

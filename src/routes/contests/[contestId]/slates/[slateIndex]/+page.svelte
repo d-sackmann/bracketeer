@@ -20,9 +20,10 @@
 
 <nav>
 	{#each data.contest.slates as slate, i}
-		<span>
-			<a href={getSlateUrl({ contestId: data.contestId, slateIndex: i })}>{slate.name}</a>
-		</span>
+		<a
+			class={i === data.slateIndex ? 'active' : ''}
+			href={getSlateUrl({ contestId: data.contestId, slateIndex: i })}>{slate.name}</a
+		>
 	{/each}
 </nav>
 
@@ -35,3 +36,20 @@
 		{playersById}
 	/>
 {/key}
+
+<style>
+	nav {
+		background-color: var(--secondary-accent-color);
+		margin-bottom: 7px;
+	}
+
+	nav > a {
+		display: inline-block;
+		margin-right: 10px;
+		padding: 7px;
+	}
+
+	nav > a.active {
+		background-color: var(--primary-bg-color);
+	}
+</style>
