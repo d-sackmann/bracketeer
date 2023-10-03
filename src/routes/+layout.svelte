@@ -1,6 +1,9 @@
 <script lang="ts">
-	import { onNavigate } from '$app/navigation';
+	import Menu from 'iconoir/icons/menu.svg';
+	import { afterNavigate, onNavigate } from '$app/navigation';
+	import { slide } from 'svelte/transition';
 
+	let menuOpen = false;
 	onNavigate((navigation) => {
 		const document = window.document as typeof window.document & {
 			startViewTransition: (cb: () => unknown) => unknown;
@@ -14,8 +17,22 @@
 			});
 		});
 	});
+
+	afterNavigate(() => {
+		menuOpen = false;
+	});
 </script>
 
+<div class="app-header">
+	<button on:click={() => (menuOpen = !menuOpen)}><img src={Menu} alt="Menu" /></button>
+</div>
+
+{#if menuOpen}
+	<nav in:slide>
+		<a href="/">Create new Contest</a>
+		<a href="/contests">Contest History</a>
+	</nav>
+{/if}
 <slot />
 
 <style>
@@ -75,5 +92,24 @@
 		cursor: pointer;
 		outline: inherit;
 		width: 100%;
+	}
+
+	.app-header {
+		width: 100%;
+		display: flex;
+		justify-content: end;
+		background-color: var(--secondary-accent-color);
+	}
+
+	nav {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		background-color: var(--secondary-accent-color);
+	}
+
+	nav > a {
+		margin-top: 3px;
+		margin-bottom: 3px;
 	}
 </style>

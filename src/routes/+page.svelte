@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ArrowRight from 'iconoir/icons/arrow-right-circle.svg';
 	import RadioGroup from '$lib/RadioGroup.svelte';
 	import EditablePlayerList from '$lib/EditablePlayerList.svelte';
 	import type { GroupMethod, Player } from '$lib/core';
@@ -55,9 +56,9 @@
 		bind:value={groupMethod}
 	/>
 	<RadioGroup label="Series length" options={seriesLengths} name="gamesToWin" value={2} />
-	<TextInput id="contest-name" name="contestName" label="Name" />
-
-	<button type="submit">Go</button>
+	<TextInput id="contest-name" name="contestName" label="Name">
+		<button type="submit"><img src={ArrowRight} alt="Go" /></button>
+	</TextInput>
 </form>
 
 <style>

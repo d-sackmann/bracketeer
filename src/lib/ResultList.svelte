@@ -124,7 +124,7 @@
 <style>
 	.result-header {
 		display: flex;
-		padding: 5px;
+		padding: 7px;
 		font-size: small;
 	}
 

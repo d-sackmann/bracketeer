@@ -22,16 +22,14 @@
 		class="container header-container no-button-style"
 		on:click={() => (open = !open)}
 		style={secondaryStyle}
-	>
+		><img style="position:fixed;" src={open ? ArrowUp : ArrowDown} alt={open ? 'close' : 'open'} />
 		<slot name="header" />
 		{#if open}
 			<div transition:slide class="container content-container" style={primaryStyle}>
 				<slot name="content" />
 			</div>
 		{/if}
-		<div class="container footer-container" style={secondaryStyle}>
-			<img src={open ? ArrowUp : ArrowDown} alt={open ? 'close' : 'open'} />
-		</div>
+		<div class="container footer-container" style={secondaryStyle} />
 	</button>
 </div>
 
@@ -48,6 +46,10 @@
 
 	.container {
 		border-radius: var(--border-radius);
+	}
+
+	.footer-container {
+		min-height: 6px;
 	}
 
 	.content-container {
