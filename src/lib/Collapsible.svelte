@@ -1,7 +1,4 @@
 <script lang="ts">
-	import ArrowUp from 'iconoir/icons/nav-arrow-up.svg';
-	import ArrowDown from 'iconoir/icons/nav-arrow-down.svg';
-
 	import { slide } from 'svelte/transition';
 	import { getColorScheme, type ColorScheme, type PlayerColor } from './playerColors';
 
@@ -22,7 +19,7 @@
 		class="container header-container no-button-style"
 		on:click={() => (open = !open)}
 		style={secondaryStyle}
-		><img style="position:fixed;" src={open ? ArrowUp : ArrowDown} alt={open ? 'close' : 'open'} />
+	>
 		<slot name="header" />
 		{#if open}
 			<div transition:slide class="container content-container" style={primaryStyle}>
