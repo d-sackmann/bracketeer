@@ -15,28 +15,9 @@
 	export let playerColors: Record<string, PlayerColor>;
 
 	onMount(() => {
-		let source = eventSource(`/sse?contestId=${contestId}&slateIndex=${slateIndex}`);
+		const source = eventSource(`/sse?contestId=${contestId}&slateIndex=${slateIndex}`);
 
-		const unsubscribe = source.subscribe((data) => {
-			let scoreChange;
-
-			try {
-				scoreChange = JSON.parse(data) as {
-					matchId: string;
-					gameIndex: number;
-					scores: number[];
-				};
-			} catch (_e) {
-				return;
-			}
-
-			slate.updateScore(scoreChange, scoreChange.scores);
-		});
-
-		return () => {
-			unsubscribe();
-			source.close();
-		};
+		return slate.linkToEventSource(source);
 	});
 </script>
 

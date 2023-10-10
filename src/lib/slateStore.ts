@@ -1,10 +1,12 @@
 import { writable, type Subscriber, type Readable } from 'svelte/store';
 import type { Slate } from './core';
+import type { ScoreChangeEventSource } from './eventSource';
 
 type GameIdentifier = { matchId: string; gameIndex: number };
 
 export type SlateStore = Readable<Slate> & {
 	updateScore: (gameIdentifier: GameIdentifier, score: number[]) => void;
+	linkToEventSource: (EventSource: ScoreChangeEventSource) => () => void;
 };
 export default function (initialValue: Slate): SlateStore {
 	const store = writable(initialValue);
@@ -40,6 +42,29 @@ export default function (initialValue: Slate): SlateStore {
 
 				return newValue;
 			});
+		},
+
+		linkToEventSource(source: ScoreChangeEventSource) {
+			const unsubscribe = source.subscribe((data) => {
+				let scoreChange;
+
+				try {
+					scoreChange = JSON.parse(data) as {
+						matchId: string;
+						gameIndex: number;
+						scores: number[];
+					};
+				} catch (_e) {
+					return;
+				}
+
+				this.updateScore(scoreChange, scoreChange.scores);
+			});
+
+			return () => {
+				unsubscribe();
+				source.close();
+			};
 		}
 	};
 }

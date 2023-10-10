@@ -10,11 +10,11 @@ export async function GET(event: RequestEvent) {
 	const contestId = params.get('contestId');
 	const slateIndexParam = params.get('slateIndex');
 
-	if (!(contestId && slateIndexParam)) {
+	if (!contestId) {
 		return;
 	}
-	const slateIndex = parseInt(slateIndexParam);
-	const stream = registerListener({ contestId, slateIndex }, sessionId);
+	const slateIndex = slateIndexParam && parseInt(slateIndexParam);
+	const stream = registerListener({ contestId, slateIndex: slateIndex || null }, sessionId);
 
 	return new Response(stream, {
 		headers: {

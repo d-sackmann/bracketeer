@@ -1,26 +1,32 @@
 import { browser } from '$app/environment';
-import { readable, type Subscriber } from 'svelte/store';
+import { readable, type Readable, type Subscriber } from 'svelte/store';
 
-export default function source(url: string) {
+export type ScoreChangeEventSource = Readable<string> & {
+	close: () => void;
+};
+export default function source(url: string): ScoreChangeEventSource {
 	let source: EventSource;
+	let store: Readable<string>;
 	return {
 		subscribe(cb: Subscriber<string>) {
 			if (!browser) {
 				return readable('').subscribe(cb);
 			}
 
-			source = new EventSource(url);
-			const store = readable('', function (set) {
-				const listener = function (event: MessageEvent) {
-					set(event.data);
-				};
+			source = source || new EventSource(url);
+			store =
+				store ||
+				readable('', function (set) {
+					const listener = function (event: MessageEvent) {
+						set(event.data);
+					};
 
-				source.addEventListener('score-change', listener);
+					source.addEventListener('score-change', listener);
 
-				return function stop() {
-					source.removeEventListener('score-change', listener);
-				};
-			});
+					return function stop() {
+						source.removeEventListener('score-change', listener);
+					};
+				});
 
 			return store.subscribe(cb);
 		},

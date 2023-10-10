@@ -17,7 +17,10 @@ type ScoreChangeEvent = SlateIdentifier & {
 	scores: number[];
 };
 
-export function registerListener({ contestId, slateIndex }: SlateIdentifier, sessionId: string) {
+export function registerListener(
+	{ contestId, slateIndex }: { contestId: string; slateIndex: number | null },
+	sessionId: string
+) {
 	const existingListener = listenersBySession[sessionId];
 	if (existingListener && existingListener.fn) {
 		if (existingListener.fn) {
@@ -34,17 +37,15 @@ export function registerListener({ contestId, slateIndex }: SlateIdentifier, ses
 	const stream = new ReadableStream({
 		start(controller) {
 			const listener = (scoreChangeEvent: ScoreChangeEvent) => {
-				if (
-					contestId !== scoreChangeEvent.contestId ||
-					slateIndex !== scoreChangeEvent.slateIndex
-				) {
-					return;
-				}
+				if (contestId !== scoreChangeEvent.contestId) return;
+				if (slateIndex !== null && slateIndex !== scoreChangeEvent.slateIndex) return;
+
 				controller.enqueue(
 					`event: score-change\ndata: ${JSON.stringify({
 						matchId: scoreChangeEvent.matchId,
 						gameIndex: scoreChangeEvent.gameIdx,
-						scores: scoreChangeEvent.scores
+						scores: scoreChangeEvent.scores,
+						slateIndex: scoreChangeEvent.slateIndex
 					})}\n\n`
 				);
 			};

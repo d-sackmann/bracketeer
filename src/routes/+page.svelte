@@ -40,6 +40,7 @@
 		label: idx + 1
 	}));
 </script>
+
 <form method="POST" use:enhance action="/contests">
 	<EditablePlayerList {groupCount} {groupMethod} bind:players />
 

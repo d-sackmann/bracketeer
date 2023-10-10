@@ -20,7 +20,7 @@ export const actions = {
 		const gamesToWinStr = data.get('gamesToWin')?.toString() || '2';
 		const playerNames = data.getAll('playerName');
 		if (playerNames.length < 2) {
-			return fail(422, {error: 'Must add at least two players.'})
+			return fail(422, { error: 'Must add at least two players.' });
 		}
 		const numGroups = parseInt(numGroupsStr);
 		const players = playerNames.map((name) => ({
