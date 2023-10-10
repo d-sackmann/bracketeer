@@ -3,12 +3,13 @@
 	export let label: string;
 	export let id: string;
 	export let value: string | undefined = undefined;
+	export let required: boolean = false;
 </script>
 
 <div class="container">
 	<label for={id}>{label}</label>
 	<div class="container">
-		<input {name} {id} type="text" bind:value />
+		<input {name} {id} type="text" bind:value {required}/>
 		<slot />
 	</div>
 </div>

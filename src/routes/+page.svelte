@@ -4,6 +4,7 @@
 	import EditablePlayerList from '$lib/EditablePlayerList.svelte';
 	import type { GroupMethod, Player } from '$lib/core';
 	import TextInput from '$lib/TextInput.svelte';
+	import { enhance } from '$app/forms';
 
 	let groupMethod: GroupMethod = 'alternating';
 	let groupCount = 1;
@@ -39,8 +40,7 @@
 		label: idx + 1
 	}));
 </script>
-
-<form method="POST" action="/contests">
+<form method="POST" use:enhance action="/contests">
 	<EditablePlayerList {groupCount} {groupMethod} bind:players />
 
 	<RadioGroup
@@ -56,7 +56,7 @@
 		bind:value={groupMethod}
 	/>
 	<RadioGroup label="Series length" options={seriesLengths} name="gamesToWin" value={2} />
-	<TextInput id="contest-name" name="contestName" label="Name">
+	<TextInput required={true} id="contest-name" name="contestName" label="Name">
 		<button type="submit"><img src={ArrowRight} alt="Go" /></button>
 	</TextInput>
 </form>
